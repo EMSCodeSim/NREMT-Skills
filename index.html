@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EMS Code Sim (Static Mockup)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding-bottom: 100px;
+      background-color: #f0f0f0;
+    }
+
+    #chat-display {
+      border: 1px solid #ccc;
+      background: white;
+      padding: 10px;
+      height: 400px;
+      overflow-y: auto;
+      margin: 10px;
+      border-radius: 8px;
+    }
+
+    #input-area {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px;
+      background-color: #fff;
+      border-top: 1px solid #ccc;
+    }
+
+    #user-input {
+      flex-grow: 1;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      padding: 10px 12px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: none;
+      background-color: #1976d2;
+      color: white;
+    }
+
+    button:hover {
+      background-color: #135ba1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Chat Display Area -->
+  <div id="chat-display">
+    <p>📟 Dispatch: Sample scenario content will appear here...</p>
+    <p>👨‍⚕️ You: Example input message</p>
+    <p>🧑‍⚕️ Patient: Example patient response</p>
+  </div>
+
+  <!-- Static Start Scenario Button -->
+  <div style="text-align: center; margin: 10px;">
+    <button>Start Scenario</button>
+  </div>
+
+  <!-- Static Chat Input Bar -->
+  <div id="input-area">
+    <button>🎤 Speak</button>
+    <input type="text" id="user-input" placeholder="Type your message..." disabled />
+    <button>Send</button>
+    <button>🚑 End Scenario</button>
+  </div>
+
+</body>
+</html>
