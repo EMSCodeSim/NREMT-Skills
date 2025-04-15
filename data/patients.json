@@ -1,11 +1,38 @@
-async function fetchPatientData() {
-  const response = await fetch('./data/patients.json');
-  const data = await response.json();
-  console.log(data.patients[0]); // Logs the first patient
-  return data.patients[0];
+{
+  "patients": [
+    {
+      "id": 1,
+      "name": "John Doe",
+      "age": 45,
+      "gender": "Male",
+      "chiefComplaint": "Chest pain",
+      "history": {
+        "allergies": "None",
+        "medications": "Aspirin",
+        "pastMedicalHistory": ["Hypertension", "High Cholesterol"],
+        "familyHistory": ["Heart Disease"]
+      },
+      "vitalSigns": {
+        "heartRate": 110,
+        "bloodPressure": "150/90",
+        "respiratoryRate": 20,
+        "oxygenSaturation": 94,
+        "temperature": 98.6
+      },
+      "assessmentFindings": {
+        "generalAppearance": "Appears anxious and diaphoretic",
+        "lungs": "Clear bilaterally",
+        "heart": "Tachycardic, regular rhythm",
+        "extremities": "No edema, good capillary refill"
+      },
+      "responsesToInterventions": {
+        "oxygen": "Oxygen saturation improves to 98%",
+        "aspirin": "Reports slight relief in chest pain",
+        "nitroglycerin": {
+          "response": "Significant pain relief",
+          "sideEffect": "Blood pressure drops to 120/80"
+        }
+      }
+    }
+  ]
 }
-
-// Example usage
-fetchPatientData().then(patient => {
-  console.log(`Patient Name: ${patient.name}`);
-});
