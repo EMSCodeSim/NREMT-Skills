@@ -3,15 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Patient Simulation</title>
+  <title>EMS Patient Simulator</title>
+  <link rel="stylesheet" href="styles/style.css">
 </head>
 <body>
-  <h1>Patient Simulation</h1>
-  
-  <!-- Display Patient Data -->
-  <div id="patient-info">
-    <p id="chief-complaint">Chief Complaint: Loading...</p>
-    <p id="vital-signs">Vital Signs: Loading...</p>
+  <h1>EMS Patient Simulator</h1>
+
+  <!-- Chat Interface -->
+  <div id="chat-interface">
+    <h2>Patient Interaction</h2>
+    <div id="chat-display"></div>
+    <input type="text" id="user-input" placeholder="Ask the patient..." />
+    <button id="send-button">Send</button>
   </div>
 
   <!-- Include JavaScript -->
