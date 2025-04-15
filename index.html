@@ -1,120 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EMS Code Sim (Static Mockup)</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding-bottom: 100px;
-      background-color: #f0f0f0;
-    }
-
-    #chat-display {
-      border: 1px solid #ccc;
-      background: white;
-      padding: 10px;
-      height: 400px;
-      overflow-y: auto;
-      margin: 10px;
-      border-radius: 8px;
-    }
-
-    #input-area {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px;
-      background-color: #fff;
-      border-top: 1px solid #ccc;
-    }
-
-    #user-input {
-      flex-grow: 1;
-      padding: 10px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-
-    button {
-      padding: 10px 12px;
-      font-size: 16px;
-      border-radius: 6px;
-      border: none;
-      background-color: #1976d2;
-      color: white;
-    }
-
-    button:hover {
-      background-color: #135ba1;
-    }
-  </style>
+  <title>Patient Simulation</title>
 </head>
 <body>
-
-  <!-- Chat Display Area -->
-  <div id="chat-display">
-    <p>📟 Dispatch: Sample scenario content will appear here...</p>
-    <p>👨‍⚕️ You: Example input message</p>
-    <p>🧑‍⚕️ Patient: Example patient response</p>
+  <h1>Patient Simulation</h1>
+  
+  <!-- Display Patient Data -->
+  <div id="patient-info">
+    <p id="chief-complaint">Chief Complaint: Loading...</p>
+    <p id="vital-signs">Vital Signs: Loading...</p>
   </div>
 
-  <!-- Static Start Scenario Button -->
-  <div style="text-align: center; margin: 10px;">
-    <button id="start-scenario">Start Scenario</button>
-  </div>
-
-  <!-- Static Chat Input Bar -->
-  <div id="input-area">
-    <button>🎤 Speak</button>
-    <input type="text" id="user-input" placeholder="Type your message..." disabled />
-    <button>Send</button>
-    <button>🚑 End Scenario</button>
-  </div>
-
-  <script>
-    // Function to fetch patient data
-    async function fetchPatientData() {
-      try {
-        const response = await fetch('./data/patients.json'); // Adjust path as needed
-        if (!response.ok) {
-          throw new Error('Failed to load patient data');
-        }
-        const data = await response.json();
-        return data.patients[0]; // Return the first patient as a test
-      } catch (error) {
-        console.error(error);
-        return null;
-      }
-    }
-
-    // Function to display patient data in chat
-    function displayPatientData(patient) {
-      const chatDisplay = document.getElementById('chat-display');
-      chatDisplay.innerHTML += `
-        <p>📟 Dispatch: A ${patient.age}-year-old ${patient.gender} is experiencing ${patient.chiefComplaint}.</p>
-        <p>🧑‍⚕️ Patient: ${patient.assessmentFindings.generalAppearance}</p>
-      `;
-    }
-
-    // Event Listener for Start Scenario Button
-    document.getElementById('start-scenario').addEventListener('click', async () => {
-      const patient = await fetchPatientData();
-      if (patient) {
-        displayPatientData(patient);
-        document.getElementById('user-input').disabled = false; // Enable input
-      } else {
-        alert('Failed to load patient scenario. Please try again.');
-      }
-    });
-  </script>
-
+  <!-- Include JavaScript -->
+  <script src="scripts/app.js"></script>
 </body>
 </html>
