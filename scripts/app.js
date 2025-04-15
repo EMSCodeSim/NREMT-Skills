@@ -1,33 +1,55 @@
-// Function to fetch and display patient data
-async function fetchPatientData() {
+// OpenAI API Key (Replace with your actual API key)
+const OPENAI_API_KEY = "YOUR_OPENAI_API_KEY";
+
+// Function to call OpenAI API and get a response
+async function getPatientResponse(userInput) {
+  const openAiEndpoint = "https://api.openai.com/v1/completions";
+
   try {
-    // Fetch the JSON file
-    const response = await fetch('./data/patients.json');
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+    const response = await fetch(openAiEndpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "text-davinci-003",
+        prompt: `You are roleplaying as a real patient in an EMS medical emergency simulation. Respond like a human patient. ${userInput}`,
+        max_tokens: 100,
+        temperature: 0.7
+      })
+    });
 
-    // Parse the JSON data
     const data = await response.json();
-
-    // Get the first patient from the array
-    const patient = data.patients[0];
-
-    // Update the HTML with patient data
-    document.getElementById('chief-complaint').innerText = `Chief Complaint: ${patient.chiefComplaint}`;
-    document.getElementById('vital-signs').innerText = `Vital Signs: 
-      HR: ${patient.vitalSigns.heartRate}, 
-      BP: ${patient.vitalSigns.bloodPressure}, 
-      RR: ${patient.vitalSigns.respiratoryRate}, 
-      O2: ${patient.vitalSigns.oxygenSaturation}`;
+    return data.choices[0].text.trim();
   } catch (error) {
-    console.error('Error fetching patient data:', error);
-
-    // Display error messages in the HTML
-    document.getElementById('chief-complaint').innerText = 'Error loading patient data.';
-    document.getElementById('vital-signs').innerText = '';
+    console.error("Error fetching response from OpenAI:", error);
+    return "I'm sorry, I can't respond right now.";
   }
 }
 
-// Call the function to fetch and display the patient data
-fetchPatientData();
+// Chat interaction logic
+document.getElementById('send-button').addEventListener('click', async () => {
+  const userInput = document.getElementById('user-input').value;
+  if (!userInput) return;
+
+  // Display user input in the chat
+  const chatDisplay = document.getElementById('chat-display');
+  const userMessage = document.createElement('p');
+  userMessage.className = 'user-message';
+  userMessage.textContent = `You: ${userInput}`;
+  chatDisplay.appendChild(userMessage);
+
+  // Get patient response
+  const patientResponse = await getPatientResponse(userInput);
+  const patientMessage = document.createElement('p');
+  patientMessage.className = 'patient-message';
+  patientMessage.textContent = `Patient: ${patientResponse}`;
+  chatDisplay.appendChild(patientMessage);
+
+  // Clear input field
+  document.getElementById('user-input').value = '';
+
+  // Scroll to the bottom of the chat display
+  chatDisplay.scrollTop = chatDisplay.scrollHeight;
+});
