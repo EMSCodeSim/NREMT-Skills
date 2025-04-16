@@ -1,22 +1,15 @@
 const fs = require("fs");
 const path = require("path");
-const fetch = require("node-fetch");
 
 exports.handler = async (event) => {
   try {
     const { userInput } = JSON.parse(event.body);
-
-    if (!userInput) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ error: "User input is required" }),
-      };
-    }
-
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+    const fetch = (await import("node-fetch")).default;
+
     const patientFile = path.resolve(__dirname, "../../data/patients.json");
     const patientData = JSON.parse(fs.readFileSync(patientFile));
-    const patient = patientData.patients[0]; // Static for now
+    const patient = patientData.patients[0];
 
     const lowerInput = userInput.toLowerCase();
     let prebuiltResponse = "";
