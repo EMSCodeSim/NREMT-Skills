@@ -1,0 +1,14 @@
+{
+  "name": "John Doe",
+  "age": 58,
+  "sex": "male",
+  "chiefComplaint": "Crushing chest pain radiating to jaw",
+  "onset": "While watching TV",
+  "quality": "Tight, crushing",
+  "region": "Center of chest, radiates to jaw and left arm",
+  "severity": 8,
+  "timing": "Started 20 minutes ago",
+  "medicalHistory": ["Hypertension", "MI in 2021"],
+  "medications": ["Metoprolol", "Aspirin daily"],
+  "allergies": ["Penicillin"]
+}
