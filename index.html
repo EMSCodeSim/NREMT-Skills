@@ -3,77 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EMS Patient Simulator</title>
-  <link rel="stylesheet" href="styles/style.css">
-</head>
-<body>
-
-  <h1 style="text-align: center;">EMS Patient Simulator</h1>
-
-  <!-- Link to Scenario Builder -->
-  <div style="text-align: center; margin-bottom: 20px;">
-    <a href="scenario-builder.html">
-      <button style="padding: 10px 20px; font-size: 16px;">
-        🛠️ Go to Scenario Builder
-      </button>
-    </a>
-  </div>
-
-  <!-- Start Scenario -->
-  <div style="text-align: center; margin-bottom: 20px;">
-    <button id="start-button">🚑 Start Scenario</button>
-  </div>
-
-  <!-- Chat Interface -->
-  <div id="chat-interface">
-    <h2>Patient Interaction</h2>
-    <div id="chat-display" style="border: 1px solid #ccc; padding: 10px; height: 200px; overflow-y: auto;"></div>
-    <input type="text" id="user-input" placeholder="Ask the patient..." />
-    <button id="send-button">Send</button>
-  </div>
-
-  <!-- JavaScript -->
-  <script>
-    async function startScenario() {
-      const chat = document.getElementById("chat-display");
-      chat.innerHTML = "";
-
-      try {
-        const res = await fetch("data/patients.json");
-        const data = await res.json();
-        const patient = data.patients[0];
-
-        const dispatch = document.createElement("p");
-        dispatch.textContent = `📟 Dispatch: Chief complaint is ${patient.chiefComplaint}. Patient appears ${patient.assessmentFindings.generalAppearance}.`;
-        chat.appendChild(dispatch);
-      } catch (err) {
-        chat.innerHTML = "<p>⚠️ Could not load patient.</p>";
-      }
-    }
-
-    document.getElementById("start-button").addEventListener("click", startScenario);
-
-    // Optional: handle "Send" button (stubbed)
-    document.getElementById("send-button").addEventListener("click", () => {
-      const userText = document.getElementById("user-input").value;
-      const chat = document.getElementById("chat-display");
-      if (userText.trim()) {
-        const message = document.createElement("p");
-        message.textContent = `🧑‍⚕️ You: ${userText}`;
-        chat.appendChild(message);
-        document.getElementById("user-input").value = "";
-        chat.scrollTop = chat.scrollHeight;
-      }
-    });
-  </script>
-</body>
-</html>
-<title>EMS Patient Simulator</title>
   <link rel="stylesheet" href="styles/style.css">
   <style>
     #chat-display {
@@ -86,12 +16,17 @@
     #grading-output {
       white-space: pre-wrap;
     }
+    #timer {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #d9534f;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
   <h1 style="text-align: center;">EMS Patient Simulator</h1>
 
-  <!-- Scenario Builder Button -->
   <div style="text-align: center; margin-bottom: 20px;">
     <a href="scenario-builder.html">
       <button style="padding: 10px 20px; font-size: 16px;">
@@ -100,3 +35,154 @@
     </a>
   </div>
 
+  <div style="text-align: center; margin-bottom: 20px;">
+    <button id="start-button">🚑 Start Scenario</button>
+    <div id="timer"></div>
+  </div>
+
+  <div id="chat-interface">
+    <h2>Patient Interaction</h2>
+    <div id="chat-display"></div>
+    <input type="text" id="user-input" placeholder="Ask the patient..." />
+    <button id="send-button">Send</button>
+  </div>
+
+  <div style="text-align: center; margin-top: 20px;">
+    <button id="end-scenario">🛑 End Scenario</button>
+  </div>
+  <pre id="grading-output"></pre>
+
+  <script>
+    let timerInterval;
+    let timeRemaining = 900;
+
+    async function startScenario() {
+      const chat = document.getElementById("chat-display");
+      chat.innerHTML = "";
+
+      try {
+        const res = await fetch("data/patients.json");
+        const data = await res.json();
+        const patient = data.patients[0];
+
+        const dispatch = document.createElement("p");
+        dispatch.textContent = `📿 Dispatch: Chief complaint is ${patient.chiefComplaint}. Patient appears ${patient.assessmentFindings.generalAppearance}.`;
+        chat.appendChild(dispatch);
+
+        startTimer();
+      } catch (err) {
+        chat.innerHTML = "<p>⚠️ Could not load patient.</p>";
+      }
+    }
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      timeRemaining = 900;
+      const timerDisplay = document.getElementById("timer");
+
+      timerInterval = setInterval(() => {
+        const minutes = Math.floor(timeRemaining / 60);
+        const seconds = timeRemaining % 60;
+        timerDisplay.textContent = `⏳ Time Remaining: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+        if (timeRemaining <= 0) {
+          clearInterval(timerInterval);
+          timerDisplay.textContent = "⏱️ Time's up!";
+          generateGrading();
+        }
+
+        timeRemaining--;
+      }, 1000);
+    }
+
+    function stopTimer() {
+      clearInterval(timerInterval);
+      document.getElementById("timer").textContent = "⏹️ Timer stopped.";
+    }
+
+    document.getElementById("start-button").addEventListener("click", startScenario);
+
+    document.getElementById("send-button").addEventListener("click", () => {
+      const userText = document.getElementById("user-input").value;
+      const chat = document.getElementById("chat-display");
+      if (userText.trim()) {
+        const message = document.createElement("p");
+        message.textContent = `🤝 You: ${userText}`;
+        chat.appendChild(message);
+
+        const patientReply = document.createElement("p");
+        patientReply.textContent = `🧍 Patient: I'm sorry, I can't respond right now.`;
+        chat.appendChild(patientReply);
+
+        document.getElementById("user-input").value = "";
+        chat.scrollTop = chat.scrollHeight;
+      }
+    });
+
+    document.getElementById("end-scenario").addEventListener("click", () => {
+      stopTimer();
+      generateGrading();
+    });
+
+    function generateGrading() {
+      const studentActions = [
+        "scene safety", "bsi", "number of patients", "als request",
+        "oxygen via NRB", "vitals", "transport", "sample signs",
+        "opqrst quality", "opqrst severity"
+      ];
+
+      const required = {
+        scene: ["scene safety", "bsi", "number of patients", "moi/noi", "c-spine"],
+        primary: ["general impression", "avpu", "airway", "breathing", "circulation", "transport"],
+        history: ["sample signs", "sample allergies", "sample meds", "sample history", "sample last oral", "sample events"],
+        opqrst: ["opqrst onset", "opqrst provocation", "opqrst quality", "opqrst region", "opqrst severity", "opqrst time"],
+        vitals: ["vitals"],
+        reassess: ["reassessment"]
+      };
+
+      const completed = [];
+      const missed = [];
+      const criticalFails = [];
+
+      Object.entries(required).forEach(([section, steps]) => {
+        steps.forEach(step => {
+          if (studentActions.includes(step)) {
+            completed.push(step);
+          } else {
+            missed.push(step);
+            if (["airway", "breathing", "circulation", "scene safety"].includes(step)) {
+              criticalFails.push(`${step} — critical fail: life threat or safety not addressed`);
+            }
+          }
+        });
+      });
+
+      const tips = [
+        "Always address scene safety and life threats first.",
+        "Memorize SAMPLE and OPQRST — say them out loud to stay on track.",
+        "Don’t skip reassessment — it shows you're monitoring the patient.",
+        "Treat airway, breathing, and circulation early if compromised."
+      ];
+
+      const output = `
+✅ Completed: ${completed.length}/${completed.length + missed.length}
+${completed.map(x => "✔️ " + x).join("\n")}
+
+❌ Missed:
+${missed.map(x => "❌ " + x).join("\n")}
+
+⚠️ Critical Fails:
+${criticalFails.length ? criticalFails.map(x => "⚠️ " + x).join("\n") : "None"}
+
+🌟 Positive Feedback:
+- Great job performing the following: ${completed.slice(0, 3).join(", ")}
+
+🧠 Tips to Improve:
+${tips.slice(0, 4).map(t => "- " + t).join("\n")}
+      `;
+
+      document.getElementById("grading-output").textContent = output;
+    }
+  </script>
+</body>
+</html>
