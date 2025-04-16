@@ -69,7 +69,6 @@ exports.handler = async (event) => {
     };
 
   } catch (error) {
-    console.error("OpenAI Function Error:", error);
     return {
       statusCode: 500,
       body: JSON.stringify({ error: "Internal Server Error" }),
