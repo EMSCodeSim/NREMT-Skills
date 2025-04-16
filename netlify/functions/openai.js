@@ -14,22 +14,26 @@ exports.handler = async (event) => {
     const lowerInput = userInput.toLowerCase();
     let prebuiltResponse = "";
 
-    if (lowerInput.includes("blood pressure")) {
-      prebuiltResponse = `My blood pressure is ${patient.vitalSigns.bloodPressure}`;
+    // 🧠 Proctor-style requests (scene/vitals/etc)
+    if (lowerInput.includes("scene safe")) {
+      prebuiltResponse = "Yes, the scene is safe and you see one patient sitting upright, alert.";
+    } else if (lowerInput.includes("how many patients")) {
+      prebuiltResponse = "There is one patient at the scene.";
+    } else if (lowerInput.includes("breath sounds")) {
+      prebuiltResponse = "You hear clear breath sounds bilaterally.";
+    } else if (lowerInput.includes("pupils")) {
+      prebuiltResponse = "Pupils are equal, round, and reactive to light.";
+    } else if (lowerInput.includes("blood pressure")) {
+      prebuiltResponse = `Blood pressure is ${patient.vitalSigns.bloodPressure}`;
     } else if (lowerInput.includes("pulse") || lowerInput.includes("heart rate")) {
-      prebuiltResponse = `My pulse is ${patient.vitalSigns.heartRate} beats per minute.`;
+      prebuiltResponse = `Pulse is ${patient.vitalSigns.heartRate} bpm`;
     } else if (lowerInput.includes("respirations")) {
-      prebuiltResponse = `I'm breathing about ${patient.vitalSigns.respiratoryRate} times per minute.`;
+      prebuiltResponse = `Respirations are ${patient.vitalSigns.respiratoryRate} per minute`;
     } else if (lowerInput.includes("oxygen") || lowerInput.includes("spo2")) {
-      prebuiltResponse = `My oxygen level is ${patient.vitalSigns.oxygenSaturation}%`;
-    } else if (lowerInput.includes("medications")) {
-      prebuiltResponse = `I take ${patient.history.medications}.`;
-    } else if (lowerInput.includes("allergies")) {
-      prebuiltResponse = `I have ${patient.history.allergies} allergies.`;
-    } else if (lowerInput.includes("history")) {
-      prebuiltResponse = `I have a history of ${patient.history.pastMedicalHistory.join(", ")}.`;
+      prebuiltResponse = `Oxygen saturation is ${patient.vitalSigns.oxygenSaturation}%`;
     }
 
+    // ✅ If matched to proctor logic, return now
     if (prebuiltResponse) {
       return {
         statusCode: 200,
@@ -37,6 +41,7 @@ exports.handler = async (event) => {
       };
     }
 
+    // 🧑 Patient-style questions (fallback to GPT)
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
