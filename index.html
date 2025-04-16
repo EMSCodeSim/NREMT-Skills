@@ -5,19 +5,72 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EMS Patient Simulator</title>
   <link rel="stylesheet" href="styles/style.css">
+  <style>
+    .builder-controls {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .subcategory, .custom-input {
+      display: none;
+      margin-top: 10px;
+    }
+    .custom-input input {
+      width: 60%;
+      padding: 6px;
+    }
+  </style>
 </head>
 <body>
 
   <!-- Title -->
   <h1 style="text-align: center;">EMS Patient Simulator</h1>
 
-  <!-- 🛠️ Build Scenario Button -->
-  <div style="text-align: center; margin-bottom: 20px;">
-    <a href="scenario-builder.html">
-      <button style="padding: 10px 20px; font-size: 16px;">
-        🛠️ Build New Scenario
-      </button>
-    </a>
+  <!-- 🛠️ Scenario Builder Section -->
+  <div class="builder-controls">
+    <h3>🛠️ Create a Scenario</h3>
+    
+    <!-- Primary Buttons -->
+    <button onclick="toggleCategory('medical')">🩺 Medical</button>
+    <button onclick="toggleCategory('trauma')">🩸 Trauma</button>
+
+    <!-- Medical Subcategories -->
+    <div id="medical-options" class="subcategory">
+      <p>Select a medical scenario:</p>
+      <select id="medicalSelect" onchange="handleSelect('medical')">
+        <option value="">-- Choose --</option>
+        <option value="chest pain">Chest Pain</option>
+        <option value="shortness of breath">Shortness of Breath</option>
+        <option value="ams">Altered Mental Status</option>
+        <option value="custom">Custom</option>
+      </select>
+      <div id="medical-custom" class="custom-input">
+        <input id="customMedicalText" type="text" placeholder="Enter custom medical scenario..." />
+        <button onclick="startBuilder('medical')">Build Scenario</button>
+      </div>
+    </div>
+
+    <!-- Trauma Subcategories -->
+    <div id="trauma-options" class="subcategory">
+      <p>Select a trauma scenario:</p>
+      <select id="traumaSelect" onchange="handleSelect('trauma')">
+        <option value="">-- Choose --</option>
+        <option value="fall">Fall</option>
+        <option value="mvc">Motor Vehicle Crash</option>
+        <option value="gunshot">Gunshot Wound</option>
+        <option value="custom">Custom</option>
+      </select>
+      <div id="trauma-custom" class="custom-input">
+        <input id="customTraumaText" type="text" placeholder="Enter custom trauma scenario..." />
+        <button onclick="startBuilder('trauma')">Build Scenario</button>
+      </div>
+    </div>
+
+    <!-- Return to Simulator Button -->
+    <div style="margin-top: 20px;">
+      <a href="index.html">
+        <button>🔙 Return to Simulator</button>
+      </a>
+    </div>
   </div>
 
   <!-- 🚑 Start Scenario Button -->
@@ -34,5 +87,32 @@
   </div>
 
   <script src="scripts/app.js"></script>
+  <script>
+    function toggleCategory(type) {
+      document.getElementById("medical-options").style.display = type === "medical" ? "block" : "none";
+      document.getElementById("trauma-options").style.display = type === "trauma" ? "block" : "none";
+      document.getElementById("medical-custom").style.display = "none";
+      document.getElementById("trauma-custom").style.display = "none";
+    }
+
+    function handleSelect(type) {
+      const selected = document.getElementById(type + "Select").value;
+      document.getElementById(type + "-custom").style.display = selected === "custom" ? "block" : "none";
+      if (selected !== "custom" && selected !== "") {
+        // Go directly to builder with preset
+        startBuilder(type, selected);
+      }
+    }
+
+    function startBuilder(type, preset = "") {
+      const customText = type === "medical"
+        ? document.getElementById("customMedicalText").value
+        : document.getElementById("customTraumaText").value;
+      const query = preset ? `?type=${type}&preset=${encodeURIComponent(preset)}` :
+                    customText ? `?type=${type}&custom=${encodeURIComponent(customText)}` : "";
+
+      window.location.href = "scenario-builder.html" + query;
+    }
+  </script>
 </body>
 </html>
