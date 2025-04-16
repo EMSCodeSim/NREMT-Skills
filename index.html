@@ -10,14 +10,16 @@
 
   <h1 style="text-align: center;">EMS Patient Simulator</h1>
 
-  <!-- Instructor Access -->
+  <!-- Link to Scenario Builder -->
   <div style="text-align: center; margin-bottom: 20px;">
     <a href="scenario-builder.html">
-      <button>🛠️ Go to Scenario Builder</button>
+      <button style="padding: 10px 20px; font-size: 16px;">
+        🛠️ Go to Scenario Builder
+      </button>
     </a>
   </div>
 
-  <!-- Start Scenario Button -->
+  <!-- Start Scenario -->
   <div style="text-align: center; margin-bottom: 20px;">
     <button id="start-button">🚑 Start Scenario</button>
   </div>
@@ -25,29 +27,44 @@
   <!-- Chat Interface -->
   <div id="chat-interface">
     <h2>Patient Interaction</h2>
-    <div id="chat-display"></div>
+    <div id="chat-display" style="border: 1px solid #ccc; padding: 10px; height: 200px; overflow-y: auto;"></div>
     <input type="text" id="user-input" placeholder="Ask the patient..." />
     <button id="send-button">Send</button>
   </div>
 
+  <!-- JavaScript -->
   <script>
     async function startScenario() {
       const chat = document.getElementById("chat-display");
       chat.innerHTML = "";
 
       try {
-        const res = await fetch("scenarios/latest.json");
+        const res = await fetch("data/patients.json");
         const data = await res.json();
+        const patient = data.patients[0];
 
         const dispatch = document.createElement("p");
-        dispatch.textContent = `📟 Dispatch: ${data.dispatch}`;
+        dispatch.textContent = `📟 Dispatch: Chief complaint is ${patient.chiefComplaint}. Patient appears ${patient.assessmentFindings.generalAppearance}.`;
         chat.appendChild(dispatch);
       } catch (err) {
-        chat.innerHTML = "<p>⚠️ Could not load scenario.</p>";
+        chat.innerHTML = "<p>⚠️ Could not load patient.</p>";
       }
     }
 
     document.getElementById("start-button").addEventListener("click", startScenario);
+
+    // Optional: handle "Send" button (stubbed)
+    document.getElementById("send-button").addEventListener("click", () => {
+      const userText = document.getElementById("user-input").value;
+      const chat = document.getElementById("chat-display");
+      if (userText.trim()) {
+        const message = document.createElement("p");
+        message.textContent = `🧑‍⚕️ You: ${userText}`;
+        chat.appendChild(message);
+        document.getElementById("user-input").value = "";
+        chat.scrollTop = chat.scrollHeight;
+      }
+    });
   </script>
 </body>
 </html>
