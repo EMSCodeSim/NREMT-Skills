@@ -10,16 +10,14 @@
 
   <h1 style="text-align: center;">EMS Patient Simulator</h1>
 
-  <!-- 🛠️ Link to Scenario Builder -->
+  <!-- Instructor Access -->
   <div style="text-align: center; margin-bottom: 20px;">
     <a href="scenario-builder.html">
-      <button style="padding: 10px 20px; font-size: 16px;">
-        🛠️ Go to Scenario Builder
-      </button>
+      <button>🛠️ Go to Scenario Builder</button>
     </a>
   </div>
 
-  <!-- 🚑 Start Scenario Button -->
+  <!-- Start Scenario Button -->
   <div style="text-align: center; margin-bottom: 20px;">
     <button id="start-button">🚑 Start Scenario</button>
   </div>
@@ -32,6 +30,24 @@
     <button id="send-button">Send</button>
   </div>
 
-  <script src="scripts/app.js"></script>
+  <script>
+    async function startScenario() {
+      const chat = document.getElementById("chat-display");
+      chat.innerHTML = "";
+
+      try {
+        const res = await fetch("scenarios/latest.json");
+        const data = await res.json();
+
+        const dispatch = document.createElement("p");
+        dispatch.textContent = `📟 Dispatch: ${data.dispatch}`;
+        chat.appendChild(dispatch);
+      } catch (err) {
+        chat.innerHTML = "<p>⚠️ Could not load scenario.</p>";
+      }
+    }
+
+    document.getElementById("start-button").addEventListener("click", startScenario);
+  </script>
 </body>
 </html>
