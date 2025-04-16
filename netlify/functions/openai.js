@@ -16,9 +16,8 @@ exports.handler = async (event) => {
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
     const patientFile = path.resolve(__dirname, "../../data/patients.json");
     const patientData = JSON.parse(fs.readFileSync(patientFile));
-    const patient = patientData.patients[0]; // You can randomize or select based on ID later
+    const patient = patientData.patients[0]; // Static for now
 
-    // Prebuilt logic for EMS vitals/history questions
     const lowerInput = userInput.toLowerCase();
     let prebuiltResponse = "";
 
@@ -28,17 +27,16 @@ exports.handler = async (event) => {
       prebuiltResponse = `My pulse is ${patient.vitalSigns.heartRate} beats per minute.`;
     } else if (lowerInput.includes("respirations")) {
       prebuiltResponse = `I'm breathing about ${patient.vitalSigns.respiratoryRate} times per minute.`;
-    } else if (lowerInput.includes("oxygen") || lowerInput.includes("saturation") || lowerInput.includes("spo2")) {
+    } else if (lowerInput.includes("oxygen") || lowerInput.includes("spo2")) {
       prebuiltResponse = `My oxygen level is ${patient.vitalSigns.oxygenSaturation}%`;
     } else if (lowerInput.includes("medications")) {
-      prebuiltResponse = `I take ${patient.history.medications}`;
+      prebuiltResponse = `I take ${patient.history.medications}.`;
     } else if (lowerInput.includes("allergies")) {
       prebuiltResponse = `I have ${patient.history.allergies} allergies.`;
     } else if (lowerInput.includes("history")) {
-      prebuiltResponse = `I have a history of ${patient.history.pastMedicalHistory.join(", ")}`;
+      prebuiltResponse = `I have a history of ${patient.history.pastMedicalHistory.join(", ")}.`;
     }
 
-    // If a prebuilt answer was found, return it
     if (prebuiltResponse) {
       return {
         statusCode: 200,
@@ -46,7 +44,6 @@ exports.handler = async (event) => {
       };
     }
 
-    // Else call GPT-4 Turbo for advanced/emotional answers
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -58,13 +55,11 @@ exports.handler = async (event) => {
         messages: [
           {
             role: "system",
-            content: `You are roleplaying as a 45-year-old male EMS patient with chest pain. 
-Your name is John Doe. You appear anxious and diaphoretic. Respond emotionally and realistically as a patient. Do not act like a chatbot. Don't provide vitals unless asked.
-Only answer when spoken to.`,
+            content: "You are a 45-year-old EMS patient named John Doe. You are anxious, diaphoretic, and complaining of chest pain. Only respond like a real patient. Don't act like a chatbot or provide vitals unless asked.",
           },
           {
             role: "user",
-            content: userInput
+            content: userInput,
           }
         ],
         temperature: 0.7,
@@ -73,8 +68,7 @@ Only answer when spoken to.`,
     });
 
     const result = await response.json();
-
-    const gptReply = result?.choices?.[0]?.message?.content?.trim() || "I'm not sure how to respond to that.";
+    const gptReply = result?.choices?.[0]?.message?.content?.trim() || "I don't know how to respond.";
 
     return {
       statusCode: 200,
@@ -82,7 +76,7 @@ Only answer when spoken to.`,
     };
 
   } catch (error) {
-    console.error("Error during OpenAI API call:", error);
+    console.error("OpenAI Function Error:", error);
     return {
       statusCode: 500,
       body: JSON.stringify({ error: "Internal Server Error" }),
