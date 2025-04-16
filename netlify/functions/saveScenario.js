@@ -11,24 +11,34 @@
     .inline { display: flex; gap: 10px; }
     .inline input, .inline select { flex: 1; }
     hr { margin: 30px 0; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
 
-  <h1>🛠️ EMS Scenario Builder</h1>
+  <h1>🛠️ EMS Medical Scenario Builder</h1>
 
-  <!-- Scenario Category -->
+  <!-- Return to Simulator -->
   <div style="text-align: center; margin-bottom: 20px;">
-    <button onclick="setType('medical')">🩺 Medical</button>
-    <button onclick="setType('trauma')">🩸 Trauma</button>
-    <a href="index.html"><button>🔙 Return to Simulator</button></a>
+    <a href="index.html">
+      <button>🔙 Return to Simulator</button>
+    </a>
   </div>
 
-  <!-- Scenario Type & Complaint -->
-  <label for="chiefComplaint">Chief Complaint:</label>
-  <select id="chiefComplaint">
+  <!-- Scenario Type (Medical Only) -->
+  <label for="complaint">Chief Complaint:</label>
+  <select id="complaint" onchange="handleComplaintSelect()">
     <option value="">-- Select --</option>
+    <option value="chest pain">Chest Pain</option>
+    <option value="shortness of breath">Shortness of Breath</option>
+    <option value="altered mental status">Altered Mental Status</option>
+    <option value="custom">Custom</option>
   </select>
+
+  <!-- Custom Complaint Text Box -->
+  <div id="custom-complaint-box" class="hidden">
+    <input id="customComplaint" type="text" placeholder="Enter custom complaint..." />
+  </div>
 
   <!-- Dispatch Info -->
   <label for="dispatch">Dispatch Info:</label>
@@ -80,76 +90,55 @@
   <pre id="output" style="background:#f4f4f4; padding:10px;"></pre>
 
   <script>
-    const categories = {
-      medical: ["Chest Pain", "Shortness of Breath", "Altered Mental Status", "Seizure", "Custom"],
-      trauma: ["Fall", "MVC", "Gunshot Wound", "Burn", "Custom"]
-    };
+    function handleComplaintSelect() {
+      const val = document.getElementById("complaint").value;
+      document.getElementById("custom-complaint-box").classList.toggle("hidden", val !== "custom");
+    }
 
-    let selectedType = "";
-
-    function setType(type) {
-      selectedType = type;
-      const complaintList = categories[type];
-      const select = document.getElementById("chiefComplaint");
-      select.innerHTML = '<option value="">-- Select --</option>';
-      complaintList.forEach(item => {
-        const opt = document.createElement("option");
-        opt.value = item.toLowerCase();
-        opt.text = item;
-        select.appendChild(opt);
-      });
+    function getComplaint() {
+      const selected = document.getElementById("complaint").value;
+      if (selected === "custom") {
+        return document.getElementById("customComplaint").value || "custom";
+      }
+      return selected;
     }
 
     function autoGenerate(field) {
-      const complaint = document.getElementById("chiefComplaint").value;
+      const complaint = getComplaint();
 
-      const data = {
+      const templates = {
         "chest pain": {
-          dispatch: "Dispatched to a 55-year-old male with chest pain.",
-          vitals: ["142/90", "98", "20", "95", "Equal, reactive", "Cool, clammy"],
-          history: "HTN, high cholesterol",
-          meds: "Nitro, Aspirin",
+          dispatch: "Respond to 58-year-old male with crushing chest pain.",
+          vitals: ["148/92", "112", "22", "94", "Equal", "Cool, pale, diaphoretic"],
+          history: "History of hypertension and MI in 2021.",
+          meds: "Aspirin, Metoprolol",
           allergies: "Penicillin"
         },
         "shortness of breath": {
-          dispatch: "Dispatched for 67-year-old female with difficulty breathing.",
-          vitals: ["130/84", "105", "28", "88", "Equal", "Cyanotic, moist"],
-          history: "COPD, smoking",
+          dispatch: "Dispatched for 67-year-old female having trouble breathing at home.",
+          vitals: ["132/86", "104", "28", "88", "Equal", "Cyanotic skin, wheezing"],
+          history: "COPD, smoking, chronic bronchitis",
           meds: "Albuterol, Prednisone",
           allergies: "None"
         },
         "altered mental status": {
-          dispatch: "Call for unresponsive male found by family on couch.",
-          vitals: ["110/70", "78", "12", "93", "Sluggish", "Warm, dry"],
-          history: "Diabetes, recent stroke",
-          meds: "Metformin, Lisinopril",
-          allergies: "None"
-        },
-        "fall": {
-          dispatch: "Fall from ladder, 62-year-old male, conscious.",
-          vitals: ["136/82", "88", "18", "96", "Equal", "Bruised, alert"],
-          history: "Osteoporosis",
-          meds: "Calcium, ASA",
-          allergies: "None"
-        },
-        "mvc": {
-          dispatch: "MVC with airbag deployment, 25-year-old female.",
-          vitals: ["124/78", "112", "22", "97", "Equal", "Anxious, diaphoretic"],
-          history: "None",
-          meds: "None",
+          dispatch: "Dispatched for unresponsive 70-year-old male, last seen normal 2 hours ago.",
+          vitals: ["110/70", "72", "12", "91", "Sluggish", "Warm and dry"],
+          history: "Diabetes, stroke, Alzheimer's",
+          meds: "Metformin, Donepezil",
           allergies: "None"
         }
       };
 
-      const entry = data[complaint];
-      if (!entry) return;
+      const data = templates[complaint];
+      if (!data) return;
 
       switch (field) {
         case "dispatch":
-          document.getElementById("dispatch").value = entry.dispatch;
+          document.getElementById("dispatch").value = data.dispatch;
           break;
         case "vitals":
-          const [bp, pulse, rr, spo2, pupils, skin] = entry.vitals;
+          const [bp, pulse, rr, spo2, pupils, skin] = data.vitals;
           document.getElementById("bp").value = bp;
           document.getElementById("pulse").value = pulse;
           document.getElementById("rr").value = rr;
@@ -158,21 +147,23 @@
           document.getElementById("skin").value = skin;
           break;
         case "history":
-          document.getElementById("history").value = entry.history;
+          document.getElementById("history").value = data.history;
           break;
         case "meds":
-          document.getElementById("meds").value = entry.meds;
+          document.getElementById("meds").value = data.meds;
           break;
         case "allergies":
-          document.getElementById("allergies").value = entry.allergies;
+          document.getElementById("allergies").value = data.allergies;
           break;
       }
     }
 
     function saveScenario() {
+      const complaint = getComplaint();
+
       const scenario = {
-        type: selectedType,
-        complaint: document.getElementById("chiefComplaint").value,
+        type: "medical",
+        complaint,
         dispatch: document.getElementById("dispatch").value,
         vitals: {
           bloodPressure: document.getElementById("bp").value,
@@ -202,7 +193,7 @@
       .then(data => {
         document.getElementById("output").textContent = "✅ " + data.message;
       })
-      .catch(err => {
+      .catch(() => {
         document.getElementById("output").textContent = "❌ Error saving scenario.";
       });
     }
