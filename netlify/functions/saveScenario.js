@@ -1,202 +1,73 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Scenario Builder</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: auto; }
-    label { display: block; margin-top: 10px; font-weight: bold; }
-    input, textarea, select, button { width: 100%; padding: 8px; margin-top: 5px; }
-    .inline { display: flex; gap: 10px; }
-    .inline input, .inline select { flex: 1; }
-    hr { margin: 30px 0; }
-    .hidden { display: none; }
-  </style>
-</head>
-<body>
+const fs = require("fs");
+const path = require("path");
 
-  <h1>🛠️ EMS Medical Scenario Builder</h1>
+exports.handler = async (event) => {
+  if (event.httpMethod !== "POST") {
+    return {
+      statusCode: 405,
+      body: JSON.stringify({ error: "Method Not Allowed" })
+    };
+  }
 
-  <!-- Return to Simulator -->
-  <div style="text-align: center; margin-bottom: 20px;">
-    <a href="index.html">
-      <button>🔙 Return to Simulator</button>
-    </a>
-  </div>
+  try {
+    const data = JSON.parse(event.body);
 
-  <!-- Scenario Type (Medical Only) -->
-  <label for="complaint">Chief Complaint:</label>
-  <select id="complaint" onchange="handleComplaintSelect()">
-    <option value="">-- Select --</option>
-    <option value="chest pain">Chest Pain</option>
-    <option value="shortness of breath">Shortness of Breath</option>
-    <option value="altered mental status">Altered Mental Status</option>
-    <option value="custom">Custom</option>
-  </select>
+    // Sanitize folder name
+    const timestamp = Date.now();
+    const complaint = (data.complaint || "scenario").replace(/[^a-z0-9]/gi, "_").toLowerCase();
+    const folderName = `${complaint}_${timestamp}`;
+    const scenarioPath = path.resolve(__dirname, `../../scenarios/${folderName}`);
 
-  <!-- Custom Complaint Text Box -->
-  <div id="custom-complaint-box" class="hidden">
-    <input id="customComplaint" type="text" placeholder="Enter custom complaint..." />
-  </div>
+    fs.mkdirSync(scenarioPath, { recursive: true });
 
-  <!-- Dispatch Info -->
-  <label for="dispatch">Dispatch Info:</label>
-  <textarea id="dispatch" rows="3"></textarea>
-  <button onclick="autoGenerate('dispatch')">Auto Generate Dispatch</button>
+    // Write scenario.json
+    fs.writeFileSync(
+      path.join(scenarioPath, "scenario.json"),
+      JSON.stringify({
+        type: data.type,
+        complaint: data.complaint,
+        dispatch: data.dispatch
+      }, null, 2)
+    );
 
-  <hr>
+    // Write vitals.json
+    fs.writeFileSync(
+      path.join(scenarioPath, "vitals.json"),
+      JSON.stringify(data.vitals, null, 2)
+    );
 
-  <!-- Vitals -->
-  <h2>Vitals</h2>
-  <div class="inline">
-    <input id="bp" placeholder="Blood Pressure" />
-    <input id="pulse" placeholder="Pulse" />
-  </div>
-  <div class="inline">
-    <input id="rr" placeholder="Respirations" />
-    <input id="spo2" placeholder="SpO2" />
-  </div>
-  <div class="inline">
-    <input id="pupils" placeholder="Pupils" />
-    <input id="skin" placeholder="Skin" />
-  </div>
-  <button onclick="autoGenerate('vitals')">Auto Generate Vitals</button>
+    // Write patient.json
+    fs.writeFileSync(
+      path.join(scenarioPath, "patient.json"),
+      JSON.stringify(data.history, null, 2)
+    );
 
-  <hr>
+    // Write proctor.json (media trigger)
+    fs.writeFileSync(
+      path.join(scenarioPath, "proctor.json"),
+      JSON.stringify(data.media, null, 2)
+    );
 
-  <!-- History -->
-  <label for="history">Medical History:</label>
-  <textarea id="history" rows="2"></textarea>
-  <button onclick="autoGenerate('history')">Auto Generate History</button>
+    // Also write latest.json for the homepage loader
+    fs.writeFileSync(
+      path.resolve(__dirname, "../../scenarios/latest.json"),
+      JSON.stringify({
+        dispatch: data.dispatch,
+        vitals: data.vitals,
+        history: data.history,
+        media: data.media
+      }, null, 2)
+    );
 
-  <label for="meds">Medications:</label>
-  <input id="meds" />
-  <button onclick="autoGenerate('meds')">Auto Generate Meds</button>
-
-  <label for="allergies">Allergies:</label>
-  <input id="allergies" />
-  <button onclick="autoGenerate('allergies')">Auto Generate Allergies</button>
-
-  <hr>
-
-  <!-- Media Upload -->
-  <h2>Media Upload</h2>
-  <input type="file" id="mediaFile" />
-  <input id="trigger" placeholder="When should media display?" />
-
-  <hr>
-  <button onclick="saveScenario()">💾 Save Scenario</button>
-  <pre id="output" style="background:#f4f4f4; padding:10px;"></pre>
-
-  <script>
-    function handleComplaintSelect() {
-      const val = document.getElementById("complaint").value;
-      document.getElementById("custom-complaint-box").classList.toggle("hidden", val !== "custom");
-    }
-
-    function getComplaint() {
-      const selected = document.getElementById("complaint").value;
-      if (selected === "custom") {
-        return document.getElementById("customComplaint").value || "custom";
-      }
-      return selected;
-    }
-
-    function autoGenerate(field) {
-      const complaint = getComplaint();
-
-      const templates = {
-        "chest pain": {
-          dispatch: "Respond to 58-year-old male with crushing chest pain.",
-          vitals: ["148/92", "112", "22", "94", "Equal", "Cool, pale, diaphoretic"],
-          history: "History of hypertension and MI in 2021.",
-          meds: "Aspirin, Metoprolol",
-          allergies: "Penicillin"
-        },
-        "shortness of breath": {
-          dispatch: "Dispatched for 67-year-old female having trouble breathing at home.",
-          vitals: ["132/86", "104", "28", "88", "Equal", "Cyanotic skin, wheezing"],
-          history: "COPD, smoking, chronic bronchitis",
-          meds: "Albuterol, Prednisone",
-          allergies: "None"
-        },
-        "altered mental status": {
-          dispatch: "Dispatched for unresponsive 70-year-old male, last seen normal 2 hours ago.",
-          vitals: ["110/70", "72", "12", "91", "Sluggish", "Warm and dry"],
-          history: "Diabetes, stroke, Alzheimer's",
-          meds: "Metformin, Donepezil",
-          allergies: "None"
-        }
-      };
-
-      const data = templates[complaint];
-      if (!data) return;
-
-      switch (field) {
-        case "dispatch":
-          document.getElementById("dispatch").value = data.dispatch;
-          break;
-        case "vitals":
-          const [bp, pulse, rr, spo2, pupils, skin] = data.vitals;
-          document.getElementById("bp").value = bp;
-          document.getElementById("pulse").value = pulse;
-          document.getElementById("rr").value = rr;
-          document.getElementById("spo2").value = spo2;
-          document.getElementById("pupils").value = pupils;
-          document.getElementById("skin").value = skin;
-          break;
-        case "history":
-          document.getElementById("history").value = data.history;
-          break;
-        case "meds":
-          document.getElementById("meds").value = data.meds;
-          break;
-        case "allergies":
-          document.getElementById("allergies").value = data.allergies;
-          break;
-      }
-    }
-
-    function saveScenario() {
-      const complaint = getComplaint();
-
-      const scenario = {
-        type: "medical",
-        complaint,
-        dispatch: document.getElementById("dispatch").value,
-        vitals: {
-          bloodPressure: document.getElementById("bp").value,
-          pulse: document.getElementById("pulse").value,
-          respirations: document.getElementById("rr").value,
-          spo2: document.getElementById("spo2").value,
-          pupils: document.getElementById("pupils").value,
-          skin: document.getElementById("skin").value
-        },
-        history: {
-          pastMedicalHistory: document.getElementById("history").value,
-          medications: document.getElementById("meds").value,
-          allergies: document.getElementById("allergies").value
-        },
-        media: {
-          filename: document.getElementById("mediaFile").files[0]?.name || "",
-          trigger: document.getElementById("trigger").value
-        }
-      };
-
-      fetch("/.netlify/functions/saveScenario", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(scenario)
-      })
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById("output").textContent = "✅ " + data.message;
-      })
-      .catch(() => {
-        document.getElementById("output").textContent = "❌ Error saving scenario.";
-      });
-    }
-  </script>
-</body>
-</html>
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ message: `Scenario saved: ${folderName}` })
+    };
+  } catch (err) {
+    console.error("Error saving scenario:", err);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: "Failed to save scenario." })
+    };
+  }
+};
