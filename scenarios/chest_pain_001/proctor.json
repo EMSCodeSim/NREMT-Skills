@@ -1,0 +1,8 @@
+{
+  "sceneSafety": "Yes, the scene is safe and you see one male patient sitting upright, alert and clutching his chest.",
+  "breathSounds": "Clear equal bilaterally",
+  "pupils": "Equal and reactive to light",
+  "responseToOxygen": "Patient reports some relief after 15L NRB applied",
+  "lungSoundsFile": "media/breath_sound.mp3",
+  "image": "media/patient.jpg"
+}
