@@ -1,37 +1,147 @@
 {
   "patients": [
     {
-      "id": 1,
       "name": "John Doe",
-      "age": 45,
-      "gender": "Male",
-      "chiefComplaint": "Chest pain",
-      "history": {
-        "allergies": "None",
-        "medications": "Aspirin",
-        "pastMedicalHistory": ["Hypertension", "High Cholesterol"],
-        "familyHistory": ["Heart Disease"]
-      },
-      "vitalSigns": {
-        "heartRate": 110,
-        "bloodPressure": "150/90",
-        "respiratoryRate": 20,
-        "oxygenSaturation": 94,
-        "temperature": 98.6
-      },
+      "age": 58,
+      "sex": "Male",
+      "chiefComplaint": "Crushing chest pain radiating to jaw",
       "assessmentFindings": {
-        "generalAppearance": "Appears anxious and diaphoretic",
-        "lungs": "Clear bilaterally",
-        "heart": "Tachycardic, regular rhythm",
-        "extremities": "No edema, good capillary refill"
+        "generalAppearance": "diaphoretic and anxious",
+        "airway": "Patent",
+        "breathing": "Shallow, moderate effort",
+        "circulation": "Skin pale and cool"
       },
-      "responsesToInterventions": {
-        "oxygen": "Oxygen saturation improves to 98%",
-        "aspirin": "Reports slight relief in chest pain",
-        "nitroglycerin": {
-          "response": "Significant pain relief",
-          "sideEffect": "Blood pressure drops to 120/80"
-        }
+      "opqrst": {
+        "onset": "30 minutes ago while watching TV",
+        "provocation": "Worse with exertion, no relief at rest",
+        "quality": "Crushing pressure",
+        "region": "Center of chest, radiating to left arm and jaw",
+        "severity": "8 out of 10",
+        "time": "Sudden onset"
+      },
+      "sample": {
+        "signsSymptoms": "Chest pain and shortness of breath",
+        "allergies": "Penicillin",
+        "medications": "Aspirin, Metoprolol",
+        "pastMedicalHistory": "MI in 2021, Hypertension",
+        "lastOralIntake": "Coffee at 7am",
+        "eventsLeadingTo": "Watching TV when pain started"
+      },
+      "vitals": {
+        "bloodPressure": "148/92",
+        "pulse": "108 bpm",
+        "respirations": "22 breaths/min",
+        "spo2": "94%",
+        "pupils": "Equal and reactive",
+        "skin": "Cool, pale, and moist"
+      }
+    },
+    {
+      "name": "Mary Smith",
+      "age": 67,
+      "sex": "Female",
+      "chiefComplaint": "Shortness of breath with wheezing",
+      "assessmentFindings": {
+        "generalAppearance": "sitting tripod, struggling to breathe",
+        "airway": "Patent",
+        "breathing": "Labored with audible wheezes",
+        "circulation": "Skin flushed, mildly cyanotic"
+      },
+      "opqrst": {
+        "onset": "Started an hour ago",
+        "provocation": "Worse when lying down or moving",
+        "quality": "Tightness in chest",
+        "region": "Across upper chest",
+        "severity": "7 out of 10",
+        "time": "Gradual worsening since this morning"
+      },
+      "sample": {
+        "signsSymptoms": "Wheezing, SOB, tight chest",
+        "allergies": "None",
+        "medications": "Albuterol inhaler, Prednisone",
+        "pastMedicalHistory": "COPD, emphysema, smoker",
+        "lastOralIntake": "Lunch at noon",
+        "eventsLeadingTo": "Exertion walking from mailbox"
+      },
+      "vitals": {
+        "bloodPressure": "130/84",
+        "pulse": "104 bpm",
+        "respirations": "28 breaths/min",
+        "spo2": "88%",
+        "pupils": "Equal and reactive",
+        "skin": "Flushed, damp"
+      }
+    },
+    {
+      "name": "Timothy Brooks",
+      "age": 72,
+      "sex": "Male",
+      "chiefComplaint": "Unresponsive with low blood sugar",
+      "assessmentFindings": {
+        "generalAppearance": "Unresponsive but breathing",
+        "airway": "Patent",
+        "breathing": "Adequate rate and depth",
+        "circulation": "Warm and dry skin"
+      },
+      "opqrst": {
+        "onset": "Found by wife, last seen normal 1 hour ago",
+        "provocation": "N/A",
+        "quality": "N/A",
+        "region": "N/A",
+        "severity": "N/A",
+        "time": "Abrupt change"
+      },
+      "sample": {
+        "signsSymptoms": "AMS, not responding",
+        "allergies": "None",
+        "medications": "Insulin, Metformin",
+        "pastMedicalHistory": "Diabetes Type II, mild stroke 2 years ago",
+        "lastOralIntake": "Unknown",
+        "eventsLeadingTo": "Found unconscious on couch"
+      },
+      "vitals": {
+        "bloodPressure": "118/78",
+        "pulse": "88 bpm",
+        "respirations": "16 breaths/min",
+        "spo2": "96%",
+        "pupils": "Equal, slow to react",
+        "skin": "Warm, dry"
+      }
+    },
+    {
+      "name": "Ashley Reyes",
+      "age": 34,
+      "sex": "Female",
+      "chiefComplaint": "Severe allergic reaction to peanuts",
+      "assessmentFindings": {
+        "generalAppearance": "Anxious, scratching skin",
+        "airway": "Swelling lips, mild stridor",
+        "breathing": "Labored, wheezing",
+        "circulation": "Hives visible on arms and chest"
+      },
+      "opqrst": {
+        "onset": "5 minutes ago after eating cookies",
+        "provocation": "Worsening quickly",
+        "quality": "Tight throat, itchy skin",
+        "region": "Face and chest",
+        "severity": "9 out of 10",
+        "time": "Sudden"
+      },
+      "sample": {
+        "signsSymptoms": "Hives, SOB, throat swelling",
+        "allergies": "Peanuts",
+        "medications": "EpiPen (not used yet)",
+        "pastMedicalHistory": "Mild seasonal allergies",
+        "lastOralIntake": "Cookies (contained peanuts)",
+        "eventsLeadingTo": "Ate snack at office meeting"
+      },
+      "vitals": {
+        "bloodPressure": "92/60",
+        "pulse": "122 bpm",
+        "respirations": "30 breaths/min",
+        "spo2": "89%",
+        "pupils": "Equal and reactive",
+        "skin": "Flushed with hives"
       }
     }
   ]
