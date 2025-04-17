@@ -53,94 +53,163 @@
   <pre id="grading-output"></pre>
 
   <script>
-    let timerInterval;
-    let timeRemaining = 900;
-    let currentPatient = null;
+    document.addEventListener("DOMContentLoaded", () => {
+      let timerInterval;
+      let timeRemaining = 900;
+      let currentPatient = null;
 
-    async function startScenario() {
-      const chat = document.getElementById("chat-display");
-      chat.innerHTML = "";
+      async function startScenario() {
+        const chat = document.getElementById("chat-display");
+        chat.innerHTML = "";
+        try {
+          console.log("Loading patient data...");
+          const res = await fetch("./data/patients.json");
+          if (!res.ok) throw new Error("Patient data not found!");
+          const data = await res.json();
+          currentPatient = data.patients[0];
 
-      try {
-        const res = await fetch("data/patients.json");
-        const data = await res.json();
-        currentPatient = data.patients[0]; // Save patient globally
+          const dispatch = document.createElement("p");
+          dispatch.textContent = `📿 Dispatch: Chief complaint is ${currentPatient.chiefComplaint}. Patient appears ${currentPatient.assessmentFindings.generalAppearance}.`;
+          chat.appendChild(dispatch);
 
-        const dispatch = document.createElement("p");
-        dispatch.textContent = `📿 Dispatch: Chief complaint is ${currentPatient.chiefComplaint}. Patient appears ${currentPatient.assessmentFindings.generalAppearance}.`;
-        chat.appendChild(dispatch);
-
-        startTimer();
-      } catch (err) {
-        chat.innerHTML = "<p>⚠️ Could not load patient.</p>";
-      }
-    }
-
-    function startTimer() {
-      clearInterval(timerInterval);
-      timeRemaining = 900;
-      const timerDisplay = document.getElementById("timer");
-
-      timerInterval = setInterval(() => {
-        const minutes = Math.floor(timeRemaining / 60);
-        const seconds = timeRemaining % 60;
-        timerDisplay.textContent = `⏳ Time Remaining: ${minutes}:${seconds.toString().padStart(2, '0')}`;
-
-        if (timeRemaining <= 0) {
-          clearInterval(timerInterval);
-          timerDisplay.textContent = "⏱️ Time's up!";
-          generateGrading();
+          startTimer();
+        } catch (err) {
+          console.error(err);
+          chat.innerHTML = "<p>⚠️ Could not load patient.</p>";
         }
+      }
 
-        timeRemaining--;
-      }, 1000);
-    }
+      function startTimer() {
+        clearInterval(timerInterval);
+        timeRemaining = 900;
+        const timerDisplay = document.getElementById("timer");
 
-    function stopTimer() {
-      clearInterval(timerInterval);
-      document.getElementById("timer").textContent = "⏹️ Timer stopped.";
-    }
+        timerInterval = setInterval(() => {
+          const minutes = Math.floor(timeRemaining / 60);
+          const seconds = timeRemaining % 60;
+          timerDisplay.textContent = `⏳ Time Remaining: ${minutes}:${seconds.toString().padStart(2, '0')}`;
 
-    document.getElementById("start-button").addEventListener("click", startScenario);
-
-    document.getElementById("send-button").addEventListener("click", () => {
-      const userText = document.getElementById("user-input").value.trim().toLowerCase();
-      const chat = document.getElementById("chat-display");
-
-      if (userText) {
-        const userMessage = document.createElement("p");
-        userMessage.textContent = `🤝 You: ${userText}`;
-        chat.appendChild(userMessage);
-
-        const patientMessage = document.createElement("p");
-        let reply = "I'm sorry, can you clarify your question?";
-
-        if (currentPatient) {
-          if (userText.includes("pain")) {
-            reply = `Yes, it's ${currentPatient.opqrst.quality}. It's about ${currentPatient.opqrst.severity} out of 10 and started ${currentPatient.opqrst.onset}.`;
-          } else if (userText.includes("medications") || userText.includes("medicine")) {
-            reply = `I take ${currentPatient.sample.medications}.`;
-          } else if (userText.includes("allergies")) {
-            reply = `I am allergic to ${currentPatient.sample.allergies}.`;
-          } else if (userText.includes("history")) {
-            reply = `My medical history includes ${currentPatient.sample.pastMedicalHistory}.`;
-          } else if (userText.includes("breathing")) {
-            reply = `My breathing is ${currentPatient.assessmentFindings.breathing}.`;
-          } else if (userText.includes("skin")) {
-            reply = `My skin is ${currentPatient.vitals.skin}.`;
-          } else if (userText.includes("pupils")) {
-            reply = `My pupils are ${currentPatient.vitals.pupils}.`;
-          } else if (userText.includes("event") || userText.includes("happened")) {
-            reply = `I was ${currentPatient.sample.eventsLeadingTo}.`;
+          if (timeRemaining <= 0) {
+            clearInterval(timerInterval);
+            timerDisplay.textContent = "⏱️ Time's up!";
+            generateGrading();
           }
-        }
-
-        patientMessage.textContent = `🧍 Patient: ${reply}`;
-        chat.appendChild(patientMessage);
-
-        document.getElementById("user-input").value = "";
-        chat.scrollTop = chat.scrollHeight;
+          timeRemaining--;
+        }, 1000);
       }
-    });
 
-    document.getElementById("end-scenario").addEventListener("click",
+      function stopTimer() {
+        clearInterval(timerInterval);
+        document.getElementById("timer").textContent = "⏹️ Timer stopped.";
+      }
+
+      function sendMessage() {
+        const userText = document.getElementById("user-input").value.trim().toLowerCase();
+        const chat = document.getElementById("chat-display");
+
+        if (userText) {
+          const userMessage = document.createElement("p");
+          userMessage.textContent = `🤝 You: ${userText}`;
+          chat.appendChild(userMessage);
+
+          const patientMessage = document.createElement("p");
+          let reply = "I'm sorry, can you clarify your question?";
+
+          if (currentPatient) {
+            if (userText.includes("pain")) {
+              reply = `Yes, it's ${currentPatient.opqrst.quality}. It's about ${currentPatient.opqrst.severity} out of 10 and started ${currentPatient.opqrst.onset}.`;
+            } else if (userText.includes("medications") || userText.includes("medicine")) {
+              reply = `I take ${currentPatient.sample.medications}.`;
+            } else if (userText.includes("allergies")) {
+              reply = `I am allergic to ${currentPatient.sample.allergies}.`;
+            } else if (userText.includes("history")) {
+              reply = `My medical history includes ${currentPatient.sample.pastMedicalHistory}.`;
+            } else if (userText.includes("breathing")) {
+              reply = `My breathing is ${currentPatient.assessmentFindings.breathing}.`;
+            } else if (userText.includes("skin")) {
+              reply = `My skin is ${currentPatient.vitals.skin}.`;
+            } else if (userText.includes("pupils")) {
+              reply = `My pupils are ${currentPatient.vitals.pupils}.`;
+            } else if (userText.includes("event") || userText.includes("happened")) {
+              reply = `I was ${currentPatient.sample.eventsLeadingTo}.`;
+            }
+          }
+
+          patientMessage.textContent = `🧍 Patient: ${reply}`;
+          chat.appendChild(patientMessage);
+
+          document.getElementById("user-input").value = "";
+          chat.scrollTop = chat.scrollHeight;
+        }
+      }
+
+      function generateGrading() {
+        const studentActions = [
+          "scene safety", "bsi", "number of patients", "als request",
+          "oxygen via NRB", "vitals", "transport", "sample signs",
+          "opqrst quality", "opqrst severity"
+        ];
+
+        const required = {
+          scene: ["scene safety", "bsi", "number of patients", "moi/noi", "c-spine"],
+          primary: ["general impression", "avpu", "airway", "breathing", "circulation", "transport"],
+          history: ["sample signs", "sample allergies", "sample meds", "sample history", "sample last oral", "sample events"],
+          opqrst: ["opqrst onset", "opqrst provocation", "opqrst quality", "opqrst region", "opqrst severity", "opqrst time"],
+          vitals: ["vitals"],
+          reassess: ["reassessment"]
+        };
+
+        const completed = [];
+        const missed = [];
+        const criticalFails = [];
+
+        Object.entries(required).forEach(([section, steps]) => {
+          steps.forEach(step => {
+            if (studentActions.includes(step)) {
+              completed.push(step);
+            } else {
+              missed.push(step);
+              if (["airway", "breathing", "circulation", "scene safety"].includes(step)) {
+                criticalFails.push(`${step} — critical fail: life threat or safety not addressed`);
+              }
+            }
+          });
+        });
+
+        const tips = [
+          "Always address scene safety and life threats first.",
+          "Memorize SAMPLE and OPQRST — say them out loud to stay on track.",
+          "Don’t skip reassessment — it shows you're monitoring the patient.",
+          "Treat airway, breathing, and circulation early if compromised."
+        ];
+
+        const output = `
+✅ Completed: ${completed.length}/${completed.length + missed.length}
+${completed.map(x => "✔️ " + x).join("\n")}
+
+❌ Missed:
+${missed.map(x => "❌ " + x).join("\n")}
+
+⚠️ Critical Fails:
+${criticalFails.length ? criticalFails.map(x => "⚠️ " + x).join("\n") : "None"}
+
+🌟 Positive Feedback:
+- Great job performing the following: ${completed.slice(0, 3).join(", ")}
+
+🧠 Tips to Improve:
+${tips.slice(0, 4).map(t => "- " + t).join("\n")}
+        `;
+
+        document.getElementById("grading-output").textContent = output;
+      }
+
+      document.getElementById("start-button").addEventListener("click", startScenario);
+      document.getElementById("send-button").addEventListener("click", sendMessage);
+      document.getElementById("end-scenario").addEventListener("click", () => {
+        stopTimer();
+        generateGrading();
+      });
+    });
+  </script>
+</body>
+</html>
