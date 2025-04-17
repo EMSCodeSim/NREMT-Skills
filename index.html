@@ -19,9 +19,25 @@
     header {
       background: #003366;
       color: white;
-      padding: 1rem;
+      padding: 1rem 1rem 0.5rem;
       text-align: center;
       font-size: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #startScenarioBtn {
+      background: #00aa00;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    #startScenarioBtn.active {
+      background: #444;
     }
     #chat {
       height: 50vh;
@@ -69,14 +85,6 @@
       color: white;
       cursor: pointer;
     }
-    #startScenarioBtn {
-      background: #00aa00;
-      max-width: 320px;
-      margin: 10px auto 15px;
-    }
-    #startScenarioBtn.active {
-      background: #444;
-    }
     #micBtn.active {
       background-color: red;
     }
@@ -94,7 +102,10 @@
   </style>
 </head>
 <body>
-  <header>EMS Code Sim</header>
+  <header>
+    EMS Code Sim
+    <button id="startScenarioBtn" onclick="startScenario()">Start Scenario</button>
+  </header>
 
   <div id="chat"></div>
 
@@ -108,8 +119,6 @@
       <button id="endScenarioBtn" onclick="endScenario()">End Scenario</button>
     </div>
   </div>
-
-  <button id="startScenarioBtn" onclick="startScenario()">Start Scenario</button>
 
   <script>
     const chat = document.getElementById("chat");
@@ -207,7 +216,7 @@
       startBtn.textContent = "Scenario Ended";
     }
 
-    // Adjust layout on mobile keyboard pop-up
+    // Fix for mobile keyboard covering input
     window.addEventListener('resize', () => {
       document.body.scrollIntoView({ behavior: 'smooth' });
     });
