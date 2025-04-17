@@ -5,9 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>EMS Code Sim</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
     html, body {
       margin: 0;
       padding: 0;
@@ -16,32 +14,12 @@
       background: #f0f4f8;
       overflow: hidden;
     }
-    body {
-      display: flex;
-      flex-direction: column;
-    }
+    body { display: flex; flex-direction: column; }
     header {
       background: #003366;
       color: white;
-      padding: 1rem 1rem 0.5rem;
+      padding: 1rem;
       text-align: center;
-      font-size: 1.5rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    #startScenarioBtn {
-      background: #00aa00;
-      color: white;
-      border: none;
-      padding: 14px 24px;
-      font-size: 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-    #startScenarioBtn.active {
-      background: #444;
     }
     #chat {
       flex: 1;
@@ -58,10 +36,7 @@
       flex-direction: column;
       gap: 10px;
     }
-    .input-row {
-      display: flex;
-      gap: 10px;
-    }
+    .input-row { display: flex; gap: 10px; }
     textarea {
       flex: 1;
       padding: 12px;
@@ -96,18 +71,25 @@
       color: white;
       cursor: pointer;
     }
-    #micBtn.active {
-      background-color: red;
-    }
-    #endScenarioBtn {
-      background-color: #cc0000;
+    #micBtn.active { background-color: red; }
+    #endScenarioBtn { background-color: #cc0000; }
+    select {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
     }
   </style>
 </head>
 <body>
   <header>
     EMS Code Sim
-    <button id="startScenarioBtn" onclick="startScenario()">Start Scenario</button>
+    <div style="margin-top: 10px;">
+      <select id="scenarioSelect" onchange="loadSelectedScenario()">
+        <option value="">-- Select Patient Scenario --</option>
+      </select>
+    </div>
   </header>
 
   <div id="chat"></div>
@@ -128,30 +110,45 @@
     const input = document.getElementById("userInput");
     const micBtn = document.getElementById("micBtn");
     const endBtn = document.getElementById("endScenarioBtn");
-    const startBtn = document.getElementById("startScenarioBtn");
+    const scenarioSelect = document.getElementById("scenarioSelect");
 
     let recognition;
     let listening = false;
-    let timerInterval;
-    let timeRemaining = 15 * 60;
     let scenarioContext = "";
 
-    async function loadScenario() {
+    async function loadPatientList() {
       try {
-        const res = await fetch("/scenarios/chest_pain_001/patient.json");
+        const res = await fetch("/data/patients.json");
+        const patients = await res.json();
+
+        patients.forEach(p => {
+          const option = document.createElement("option");
+          option.value = p.folder;
+          option.textContent = `${p.name} - ${p.chiefComplaint}`;
+          scenarioSelect.appendChild(option);
+        });
+      } catch (err) {
+        console.error("Error loading patients.json", err);
+      }
+    }
+
+    async function loadSelectedScenario() {
+      const folder = scenarioSelect.value;
+      if (!folder) return;
+
+      try {
+        const res = await fetch(`/scenarios/${folder}/patient.json`);
         const patient = await res.json();
 
         scenarioContext = `You are a ${patient.age}-year-old ${patient.sex} experiencing ${patient.chiefComplaint}. 
         The pain is ${patient.quality} in the ${patient.region}. Onset: ${patient.onset}, Severity: ${patient.severity}/10, Timing: ${patient.timing}. 
         Medical History: ${patient.medicalHistory.join(", ")}. Medications: ${patient.medications.join(", ")}. Allergies: ${patient.allergies.join(", ")}.`;
 
-        console.log("Scenario context loaded.");
+        appendMessage("System", `Scenario "${folder}" loaded.`);
       } catch (err) {
-        console.error("Failed to load scenario:", err);
+        console.error("Error loading patient.json", err);
       }
     }
-
-    window.onload = loadScenario;
 
     function appendMessage(sender, text) {
       const msg = document.createElement("div");
@@ -190,9 +187,7 @@
           sendMessage(transcript);
         };
 
-        recognition.onend = () => {
-          micBtn.classList.remove("active");
-        };
+        recognition.onend = () => micBtn.classList.remove("active");
       }
 
       if (!listening) {
@@ -206,40 +201,21 @@
       }
     }
 
-    function startScenario() {
-      appendMessage("System", "Scenario started.");
-      startBtn.disabled = true;
-      startBtn.classList.add("active");
-
-      timerInterval = setInterval(() => {
-        if (timeRemaining <= 0) {
-          clearInterval(timerInterval);
-          startBtn.textContent = "Time's up!";
-          return;
-        }
-        const minutes = Math.floor(timeRemaining / 60);
-        const seconds = timeRemaining % 60;
-        startBtn.textContent = `${minutes}:${seconds.toString().padStart(2, "0")}`;
-        timeRemaining--;
-      }, 1000);
-    }
-
     function endScenario() {
       appendMessage("System", "Scenario ended.");
       input.disabled = true;
       micBtn.disabled = true;
       endBtn.disabled = true;
-      clearInterval(timerInterval);
-      startBtn.textContent = "Scenario Ended";
     }
 
-    // Send on Enter key (without Shift)
     input.addEventListener("keydown", function (event) {
       if (event.key === "Enter" && !event.shiftKey) {
         event.preventDefault();
         sendMessage();
       }
     });
+
+    window.onload = loadPatientList;
   </script>
 </body>
 </html>
