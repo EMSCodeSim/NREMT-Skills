@@ -22,22 +22,6 @@
       padding: 1rem;
       text-align: center;
       font-size: 1.5rem;
-      position: relative;
-    }
-    #startScenarioBtn {
-      position: absolute;
-      top: 10px;
-      right: 20px;
-      background: #00aa00;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      font-size: 16px;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    #startScenarioBtn.active {
-      background: #444;
     }
     #chat {
       height: 50vh;
@@ -53,7 +37,7 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
-      height: calc(50vh - 72px);
+      height: calc(45vh - 80px);
     }
     .input-row {
       display: flex;
@@ -74,21 +58,30 @@
       justify-content: center;
       gap: 10px;
     }
-    button {
+    .button-row button,
+    #startScenarioBtn {
+      flex: 1;
       padding: 12px 18px;
+      font-size: 16px;
       border: none;
       border-radius: 6px;
-      font-size: 16px;
       background: #0055aa;
       color: white;
       cursor: pointer;
-      flex-shrink: 0;
     }
-    button:hover {
-      background: #003d80;
+    #startScenarioBtn {
+      background: #00aa00;
+      max-width: 320px;
+      margin: 10px auto 15px;
+    }
+    #startScenarioBtn.active {
+      background: #444;
     }
     #micBtn.active {
       background-color: red;
+    }
+    #endScenarioBtn {
+      background-color: #cc0000;
     }
     @media (max-height: 500px) {
       #chat {
@@ -101,10 +94,7 @@
   </style>
 </head>
 <body>
-  <header>
-    EMS Code Sim
-    <button id="startScenarioBtn" onclick="startScenario()">Start Scenario</button>
-  </header>
+  <header>EMS Code Sim</header>
 
   <div id="chat"></div>
 
@@ -115,14 +105,17 @@
     </div>
     <div class="button-row">
       <button id="micBtn" onclick="toggleMic()">🎤 Mic</button>
-      <button onclick="endScenario()" style="background:#cc0000;">End Scenario</button>
+      <button id="endScenarioBtn" onclick="endScenario()">End Scenario</button>
     </div>
   </div>
+
+  <button id="startScenarioBtn" onclick="startScenario()">Start Scenario</button>
 
   <script>
     const chat = document.getElementById("chat");
     const input = document.getElementById("userInput");
     const micBtn = document.getElementById("micBtn");
+    const endBtn = document.getElementById("endScenarioBtn");
     const startBtn = document.getElementById("startScenarioBtn");
 
     let recognition;
@@ -209,11 +202,12 @@
       appendMessage("System", "Scenario ended.");
       input.disabled = true;
       micBtn.disabled = true;
+      endBtn.disabled = true;
       clearInterval(timerInterval);
       startBtn.textContent = "Scenario Ended";
     }
 
-    // Mobile keyboard layout adjustment
+    // Adjust layout on mobile keyboard pop-up
     window.addEventListener('resize', () => {
       document.body.scrollIntoView({ behavior: 'smooth' });
     });
