@@ -2,56 +2,244 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>EMS Code Sim</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: Arial, sans-serif;
+      background: #f0f4f8;
+      overflow: hidden;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: #003366;
+      color: white;
+      padding: 1rem 1rem 0.5rem;
+      text-align: center;
+      font-size: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #startScenarioBtn {
+      background: #00aa00;
+      color: white;
+      border: none;
+      padding: 14px 24px;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    #startScenarioBtn.active {
+      background: #444;
+    }
+    #chat {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      background: white;
+      border-top: 1px solid #ccc;
+      border-bottom: 1px solid #ccc;
+      scroll-behavior: smooth;
+    }
+    #inputSection {
+      padding: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .input-row {
+      display: flex;
+      gap: 10px;
+    }
+    textarea {
+      flex: 1;
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      resize: none;
+      height: 64px;
+      line-height: 1.4;
+    }
+    .send-button {
+      padding: 16px 28px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      background: #0055aa;
+      color: white;
+      cursor: pointer;
+    }
+    .button-row {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    .button-row button {
+      flex: 1;
+      padding: 16px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      background: #0055aa;
+      color: white;
+      cursor: pointer;
+    }
+    #micBtn.active {
+      background-color: red;
+    }
+    #endScenarioBtn {
+      background-color: #cc0000;
+    }
+  </style>
 </head>
 <body>
-  <h1>EMS Code Sim</h1>
-  <button onclick="startScenario()">Start Scenario</button>
-  <div id="chat" style="height:300px; overflow-y:auto; border:1px solid #ccc; margin:10px; padding:10px;"></div>
-  <textarea id="userInput" placeholder="Type..." rows="2" style="width:100%;"></textarea>
-  <button onclick="sendMessage()">Send</button>
+  <header>
+    EMS Code Sim
+    <button id="startScenarioBtn" onclick="startScenario()">Start Scenario</button>
+  </header>
+
+  <div id="chat"></div>
+
+  <div id="inputSection">
+    <div class="input-row">
+      <textarea id="userInput" placeholder="Type or speak..." rows="2"></textarea>
+      <button class="send-button" onclick="sendMessage()">Send</button>
+    </div>
+    <div class="button-row">
+      <button id="micBtn" onclick="toggleMic()">🎤 Mic</button>
+      <button id="endScenarioBtn" onclick="endScenario()">End Scenario</button>
+    </div>
+  </div>
 
   <script>
     const chat = document.getElementById("chat");
     const input = document.getElementById("userInput");
+    const micBtn = document.getElementById("micBtn");
+    const endBtn = document.getElementById("endScenarioBtn");
+    const startBtn = document.getElementById("startScenarioBtn");
+
+    let recognition;
+    let listening = false;
+    let timerInterval;
+    let timeRemaining = 15 * 60;
     let scenarioContext = "";
 
     async function loadScenario() {
       try {
         const res = await fetch("/scenarios/chest_pain_001/patient.json");
         const patient = await res.json();
-        scenarioContext = `You are a ${patient.age}-year-old ${patient.sex} experiencing ${patient.chiefComplaint}.`;
-        console.log("Scenario loaded");
+
+        scenarioContext = `You are a ${patient.age}-year-old ${patient.sex} experiencing ${patient.chiefComplaint}. 
+        The pain is ${patient.quality} in the ${patient.region}. Onset: ${patient.onset}, Severity: ${patient.severity}/10, Timing: ${patient.timing}. 
+        Medical History: ${patient.medicalHistory.join(", ")}. Medications: ${patient.medications.join(", ")}. Allergies: ${patient.allergies.join(", ")}.`;
+
+        console.log("Scenario context loaded.");
       } catch (err) {
-        console.error("Error loading scenario:", err);
+        console.error("Failed to load scenario:", err);
       }
     }
 
-    async function sendMessage() {
-      const message = input.value.trim();
-      if (!message) return;
-      chat.innerHTML += `<div><b>You:</b> ${message}</div>`;
-      input.value = "";
+    window.onload = loadScenario;
 
-      const res = await fetch("/.netlify/functions/openai", {
-        method: "POST",
-        body: JSON.stringify({
-          message,
-          role: "patient",
-          context: scenarioContext
-        }),
-      });
-      const data = await res.json();
-      chat.innerHTML += `<div><b>Patient:</b> ${data.response}</div>`;
+    function appendMessage(sender, text) {
+      const msg = document.createElement("div");
+      msg.innerHTML = `<strong>${sender}:</strong> ${text}`;
+      chat.appendChild(msg);
       chat.scrollTop = chat.scrollHeight;
     }
 
-    function startScenario() {
-      chat.innerHTML += `<div><i>Scenario started</i></div>`;
+    async function sendMessage(textOverride) {
+      const message = textOverride || input.value.trim();
+      if (!message) return;
+      appendMessage("You", message);
+      input.value = "";
+
+      const response = await fetch("/.netlify/functions/openai", {
+        method: "POST",
+        body: JSON.stringify({ message, role: "patient", context: scenarioContext }),
+      });
+      const data = await response.json();
+      appendMessage("Patient", data.response);
+
+      setTimeout(() => {
+        if (listening) recognition.start();
+      }, 1000);
     }
 
-    window.onload = loadScenario;
+    function toggleMic() {
+      if (!recognition) {
+        recognition = new webkitSpeechRecognition();
+        recognition.lang = "en-US";
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.onresult = (event) => {
+          const transcript = event.results[0][0].transcript;
+          sendMessage(transcript);
+        };
+
+        recognition.onend = () => {
+          micBtn.classList.remove("active");
+        };
+      }
+
+      if (!listening) {
+        recognition.start();
+        micBtn.classList.add("active");
+        listening = true;
+      } else {
+        recognition.stop();
+        micBtn.classList.remove("active");
+        listening = false;
+      }
+    }
+
+    function startScenario() {
+      appendMessage("System", "Scenario started.");
+      startBtn.disabled = true;
+      startBtn.classList.add("active");
+
+      timerInterval = setInterval(() => {
+        if (timeRemaining <= 0) {
+          clearInterval(timerInterval);
+          startBtn.textContent = "Time's up!";
+          return;
+        }
+        const minutes = Math.floor(timeRemaining / 60);
+        const seconds = timeRemaining % 60;
+        startBtn.textContent = `${minutes}:${seconds.toString().padStart(2, "0")}`;
+        timeRemaining--;
+      }, 1000);
+    }
+
+    function endScenario() {
+      appendMessage("System", "Scenario ended.");
+      input.disabled = true;
+      micBtn.disabled = true;
+      endBtn.disabled = true;
+      clearInterval(timerInterval);
+      startBtn.textContent = "Scenario Ended";
+    }
+
+    // Send on Enter key (without Shift)
+    input.addEventListener("keydown", function (event) {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+      }
+    });
   </script>
 </body>
 </html>
