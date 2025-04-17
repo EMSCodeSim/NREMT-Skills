@@ -1,40 +1,14 @@
 {
-  "patients": [
-    {
-      "name": "John Doe",
-      "age": 58,
-      "sex": "Male",
-      "chiefComplaint": "Crushing chest pain radiating to jaw",
-      "assessmentFindings": {
-        "generalAppearance": "diaphoretic and anxious",
-        "airway": "Patent",
-        "breathing": "Shallow, moderate effort",
-        "circulation": "Skin pale and cool"
-      },
-      "opqrst": {
-        "onset": "30 minutes ago while watching TV",
-        "provocation": "Worse with exertion, no relief at rest",
-        "quality": "Crushing pressure",
-        "region": "Center of chest, radiating to left arm and jaw",
-        "severity": "8 out of 10",
-        "time": "Sudden onset"
-      },
-      "sample": {
-        "signsSymptoms": "Chest pain and shortness of breath",
-        "allergies": "Penicillin",
-        "medications": "Aspirin, Metoprolol",
-        "pastMedicalHistory": "MI in 2021, Hypertension",
-        "lastOralIntake": "Coffee at 7am",
-        "eventsLeadingTo": "Watching TV when pain started"
-      },
-      "vitals": {
-        "bloodPressure": "148/92",
-        "pulse": "108 bpm",
-        "respirations": "22 breaths/min",
-        "spo2": "94%",
-        "pupils": "Equal and reactive",
-        "skin": "Cool, pale, and moist"
-      }
-    }
-  ]
+  "name": "nremt-simulator",
+  "version": "1.0.0",
+  "description": "EMS Patient Simulator with AI Proctor and Patient",
+  "main": "index.js",
+  "scripts": {
+    "build": "echo 'No build step required'",
+    "start": "netlify dev"
+  },
+  "dependencies": {
+    "openai": "^4.0.0"
+  },
+  "license": "MIT"
 }
