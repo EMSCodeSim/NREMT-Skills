@@ -2,165 +2,137 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EMS Patient Simulator AI Powered</title>
-  <link rel="stylesheet" href="styles/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EMS Code Sim</title>
   <style>
-    #chat-display {
-      border: 1px solid #ccc;
-      padding: 10px;
-      height: 300px;
-      overflow-y: auto;
-      background: #f9f9f9;
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f4f8;
+      margin: 0;
+      padding: 0;
     }
-    #grading-output {
-      white-space: pre-wrap;
-    }
-    #timer {
+    header {
+      background: #003366;
+      color: white;
+      padding: 1rem;
+      text-align: center;
       font-size: 1.5rem;
-      font-weight: bold;
-      color: #d9534f;
-      margin-top: 10px;
+    }
+    #chat {
+      height: 70vh;
+      overflow-y: auto;
+      padding: 1rem;
+      background: white;
+      border: 1px solid #ccc;
+      margin: 1rem;
+      border-radius: 8px;
+    }
+    #inputRow {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      padding: 1rem;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 5px;
+      background: #0055aa;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #003d80;
+    }
+    #micBtn.active {
+      background-color: red;
     }
   </style>
 </head>
 <body>
-  <h1 style="text-align: center;">EMS Patient Simulator (AI Powered)</h1>
+  <header>EMS Code Sim</header>
 
-  <div style="text-align: center; margin-bottom: 20px;">
-    <a href="scenario-builder.html">
-      <button style="padding: 10px 20px; font-size: 16px;">🧰️ Go to Scenario Builder</button>
-    </a>
-  </div>
+  <div id="chat"></div>
 
-  <div style="text-align: center; margin-bottom: 20px;">
-    <button id="start-button">🚑 Start Scenario</button>
-    <div id="timer"></div>
+  <div id="inputRow">
+    <input type="text" id="userInput" placeholder="Type or speak..." />
+    <button onclick="sendMessage()">Send</button>
+    <button id="micBtn" onclick="toggleMic()">🎤</button>
+    <button onclick="endScenario()">End Scenario</button>
   </div>
-
-  <div id="chat-interface">
-    <h2>Patient Interaction</h2>
-    <div id="chat-display"></div>
-    <input type="text" id="user-input" placeholder="Ask the patient or proctor..." />
-    <button id="send-button">Send</button>
-  </div>
-
-  <div style="text-align: center; margin-top: 20px;">
-    <button id="end-scenario">🛑 End Scenario</button>
-  </div>
-  <pre id="grading-output"></pre>
 
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      let timerInterval;
-      let timeRemaining = 900;
-      let currentPatient = null;
+    const chat = document.getElementById("chat");
+    const input = document.getElementById("userInput");
+    const micBtn = document.getElementById("micBtn");
 
-      async function startScenario() {
-        const chat = document.getElementById("chat-display");
-        chat.innerHTML = "";
-        try {
-          const res = await fetch("./data/patients.json");
-          if (!res.ok) throw new Error("Patient data not found!");
-          const data = await res.json();
-          currentPatient = data.patients[0];
+    let recognition;
+    let listening = false;
 
-          const dispatch = document.createElement("p");
-          dispatch.textContent = `📿 Dispatch: Chief complaint is ${currentPatient.chiefComplaint}. Patient appears ${currentPatient.assessmentFindings.generalAppearance}.`;
-          chat.appendChild(dispatch);
+    function appendMessage(sender, text) {
+      const msg = document.createElement("div");
+      msg.innerHTML = `<strong>${sender}:</strong> ${text}`;
+      chat.appendChild(msg);
+      chat.scrollTop = chat.scrollHeight;
+    }
 
-          startTimer();
-        } catch (err) {
-          console.error(err);
-          chat.innerHTML = "<p>⚠️ Could not load patient data.</p>";
-        }
-      }
+    async function sendMessage(textOverride) {
+      const message = textOverride || input.value.trim();
+      if (!message) return;
+      appendMessage("You", message);
+      input.value = "";
 
-      function startTimer() {
-        clearInterval(timerInterval);
-        timeRemaining = 900;
-        const timerDisplay = document.getElementById("timer");
-
-        timerInterval = setInterval(() => {
-          const minutes = Math.floor(timeRemaining / 60);
-          const seconds = timeRemaining % 60;
-          timerDisplay.textContent = `⏳ Time Remaining: ${minutes}:${seconds.toString().padStart(2, '0')}`;
-
-          if (timeRemaining <= 0) {
-            clearInterval(timerInterval);
-            timerDisplay.textContent = "⏱️ Time's up!";
-            generateGrading();
-          }
-          timeRemaining--;
-        }, 1000);
-      }
-
-      function stopTimer() {
-        clearInterval(timerInterval);
-        document.getElementById("timer").textContent = "⏹️ Timer stopped.";
-      }
-
-      async function sendMessage() {
-        const userText = document.getElementById("user-input").value.trim();
-        const chat = document.getElementById("chat-display");
-
-        if (!userText) return;
-
-        const userMessage = document.createElement("p");
-        userMessage.textContent = `🤝 You: ${userText}`;
-        chat.appendChild(userMessage);
-
-        // Decide role: Proctor or Patient
-        let role = "patient"; // default
-
-        const proctorKeywords = ["scene safe", "bsi", "number of patients", "als", "vitals", "blood pressure", "pulse", "respirations", "spo2", "pupils", "skin"];
-        const userTextLower = userText.toLowerCase();
-
-        if (proctorKeywords.some(keyword => userTextLower.includes(keyword))) {
-          role = "proctor";
-        }
-
-        const patientMessage = document.createElement("p");
-        patientMessage.textContent = `🧍 ${role === "patient" ? "Patient" : "Proctor"}: ...`;
-        chat.appendChild(patientMessage);
-
-        chat.scrollTop = chat.scrollHeight;
-
-        try {
-          const res = await fetch("/.netlify/functions/openai", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: userText, role })
-          });
-
-          const data = await res.json();
-
-          if (data.response) {
-            patientMessage.textContent = `🧍 ${role === "patient" ? "Patient" : "Proctor"}: ${data.response}`;
-          } else {
-            patientMessage.textContent = "⚠️ Error: No response.";
-          }
-
-        } catch (err) {
-          console.error(err);
-          patientMessage.textContent = "⚠️ Error contacting AI.";
-        }
-
-        document.getElementById("user-input").value = "";
-      }
-
-      function generateGrading() {
-        const output = "✅ Grading feature working! Next we will track actual actions dynamically for this report.";
-        document.getElementById("grading-output").textContent = output;
-      }
-
-      document.getElementById("start-button").addEventListener("click", startScenario);
-      document.getElementById("send-button").addEventListener("click", sendMessage);
-      document.getElementById("end-scenario").addEventListener("click", () => {
-        stopTimer();
-        generateGrading();
+      const response = await fetch("/.netlify/functions/openai", {
+        method: "POST",
+        body: JSON.stringify({ message, role: "patient" }),
       });
-    });
+      const data = await response.json();
+      appendMessage("Patient", data.response);
+
+      setTimeout(() => {
+        if (listening) recognition.start();
+      }, 1000);
+    }
+
+    function toggleMic() {
+      if (!recognition) {
+        recognition = new webkitSpeechRecognition();
+        recognition.lang = "en-US";
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.onresult = (event) => {
+          const transcript = event.results[0][0].transcript;
+          sendMessage(transcript);
+        };
+
+        recognition.onend = () => {
+          micBtn.classList.remove("active");
+        };
+      }
+
+      if (!listening) {
+        recognition.start();
+        micBtn.classList.add("active");
+        listening = true;
+      } else {
+        recognition.stop();
+        micBtn.classList.remove("active");
+        listening = false;
+      }
+    }
+
+    function endScenario() {
+      appendMessage("System", "Scenario ended.");
+      input.disabled = true;
+      micBtn.disabled = true;
+    }
   </script>
 </body>
 </html>
