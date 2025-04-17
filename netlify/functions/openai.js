@@ -8,7 +8,7 @@ const openai = new OpenAIApi(configuration);
 
 exports.handler = async (event) => {
   try {
-    const { message, role } = JSON.parse(event.body);
+    const { message, role, context } = JSON.parse(event.body);
 
     if (!message || !role) {
       return {
@@ -17,16 +17,11 @@ exports.handler = async (event) => {
       };
     }
 
-    let systemPrompt = "";
-    let model = "";
+    const systemPrompt = role === "patient"
+      ? context || "You are a simulated EMS patient. Only respond with what a patient would realistically say."
+      : "You are the EMS proctor. Only respond with vital signs or scene info when asked.";
 
-    if (role === "proctor") {
-      systemPrompt = `You are the EMS proctor. You provide vitals, scene details, or number of patients upon request. Be brief, accurate, and respond only with proctor-level information.`;
-      model = "gpt-3.5-turbo";
-    } else {
-      systemPrompt = `You are a 58-year-old male experiencing crushing chest pain radiating to your jaw and left arm. You are diaphoretic and anxious. Respond as a patient would, emotionally and believably. Do not give out medical readings unless directly told by the proctor. Answer based only on what you would realistically know or feel.`;
-      model = "gpt-4-turbo";
-    }
+    const model = role === "proctor" ? "gpt-3.5-turbo" : "gpt-4-turbo";
 
     const response = await openai.createChatCompletion({
       model,
