@@ -72,13 +72,21 @@
       height: 64px;
       line-height: 1.4;
     }
+    .send-button {
+      padding: 16px 28px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      background: #0055aa;
+      color: white;
+      cursor: pointer;
+    }
     .button-row {
       display: flex;
       justify-content: center;
       gap: 10px;
     }
-    .button-row button,
-    #startScenarioBtn {
+    .button-row button {
       flex: 1;
       padding: 16px;
       font-size: 16px;
@@ -115,7 +123,7 @@
   <div id="inputSection">
     <div class="input-row">
       <textarea id="userInput" placeholder="Type or speak..." rows="2"></textarea>
-      <button onclick="sendMessage()">Send</button>
+      <button class="send-button" onclick="sendMessage()">Send</button>
     </div>
     <div class="button-row">
       <button id="micBtn" onclick="toggleMic()">🎤 Mic</button>
@@ -222,6 +230,14 @@
     // Adjust for mobile keyboard
     window.addEventListener('resize', () => {
       document.body.scrollIntoView({ behavior: 'smooth' });
+    });
+
+    // Submit on Enter key
+    input.addEventListener("keydown", function (event) {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+      }
     });
   </script>
 </body>
