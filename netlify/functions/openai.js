@@ -19,11 +19,11 @@ exports.handler = async (event) => {
 
     const systemPrompt = role === "patient"
       ? context || "You are a simulated EMS patient. Only respond with what a patient would realistically say."
-      : "You are the EMS proctor. Only respond with vital signs or scene info when asked.";
+      : "You are the EMS proctor. Only respond with vitals or scene info when asked.";
 
     const model = role === "proctor" ? "gpt-3.5-turbo" : "gpt-4-turbo";
 
-    const response = await openai.createChatCompletion({
+    const chatResponse = await openai.createChatCompletion({
       model,
       messages: [
         { role: "system", content: systemPrompt },
@@ -32,14 +32,17 @@ exports.handler = async (event) => {
       temperature: 0.7,
     });
 
+    const reply = chatResponse?.data?.choices?.[0]?.message?.content?.trim();
+
     return {
       statusCode: 200,
-      body: JSON.stringify({ response: response.data.choices[0].message.content }),
+      body: JSON.stringify({ response: reply || "I'm sorry, I didn't understand that." }),
     };
   } catch (error) {
+    console.error("OpenAI error:", error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: error.message }),
+      body: JSON.stringify({ error: "Server error: " + error.message }),
     };
   }
 };
