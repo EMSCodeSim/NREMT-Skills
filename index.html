@@ -17,6 +17,22 @@
       padding: 1rem;
       text-align: center;
       font-size: 1.5rem;
+      position: relative;
+    }
+    #startScenarioBtn {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      background: #00aa00;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #startScenarioBtn.active {
+      background: #444;
     }
     #chat {
       height: 70vh;
@@ -56,7 +72,10 @@
   </style>
 </head>
 <body>
-  <header>EMS Code Sim</header>
+  <header>
+    EMS Code Sim
+    <button id="startScenarioBtn" onclick="startScenario()">Start Scenario</button>
+  </header>
 
   <div id="chat"></div>
 
@@ -71,9 +90,12 @@
     const chat = document.getElementById("chat");
     const input = document.getElementById("userInput");
     const micBtn = document.getElementById("micBtn");
+    const startBtn = document.getElementById("startScenarioBtn");
 
     let recognition;
     let listening = false;
+    let timerInterval;
+    let timeRemaining = 15 * 60; // 15 minutes in seconds
 
     function appendMessage(sender, text) {
       const msg = document.createElement("div");
@@ -128,10 +150,31 @@
       }
     }
 
+    function startScenario() {
+      appendMessage("System", "Scenario started.");
+      startBtn.disabled = true;
+      startBtn.classList.add("active");
+
+      // Start 15-minute countdown
+      timerInterval = setInterval(() => {
+        if (timeRemaining <= 0) {
+          clearInterval(timerInterval);
+          startBtn.textContent = "Time's up!";
+          return;
+        }
+        const minutes = Math.floor(timeRemaining / 60);
+        const seconds = timeRemaining % 60;
+        startBtn.textContent = `${minutes}:${seconds.toString().padStart(2, "0")}`;
+        timeRemaining--;
+      }, 1000);
+    }
+
     function endScenario() {
       appendMessage("System", "Scenario ended.");
       input.disabled = true;
       micBtn.disabled = true;
+      clearInterval(timerInterval);
+      startBtn.textContent = "Scenario Ended";
     }
   </script>
 </body>
