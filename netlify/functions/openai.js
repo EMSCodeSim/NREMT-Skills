@@ -1,82 +1,48 @@
-const fs = require("fs");
-const path = require("path");
+const { Configuration, OpenAIApi } = require("openai");
+
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+const openai = new OpenAIApi(configuration);
 
 exports.handler = async (event) => {
   try {
-    const { userInput } = JSON.parse(event.body);
-    const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-    const fetch = (await import("node-fetch")).default;
+    const { message, role } = JSON.parse(event.body);
 
-    const patientFile = path.resolve(__dirname, "../../data/patients.json");
-    const patientData = JSON.parse(fs.readFileSync(patientFile));
-    const patient = patientData.patients[0];
-
-    const lowerInput = userInput.toLowerCase();
-    let prebuiltResponse = "";
-
-    // 🧠 Proctor-style requests (scene/vitals/etc)
-    if (lowerInput.includes("scene safe")) {
-      prebuiltResponse = "Yes, the scene is safe and you see one patient sitting upright, alert.";
-    } else if (lowerInput.includes("how many patients")) {
-      prebuiltResponse = "There is one patient at the scene.";
-    } else if (lowerInput.includes("breath sounds")) {
-      prebuiltResponse = "You hear clear breath sounds bilaterally.";
-    } else if (lowerInput.includes("pupils")) {
-      prebuiltResponse = "Pupils are equal, round, and reactive to light.";
-    } else if (lowerInput.includes("blood pressure")) {
-      prebuiltResponse = `Blood pressure is ${patient.vitalSigns.bloodPressure}`;
-    } else if (lowerInput.includes("pulse") || lowerInput.includes("heart rate")) {
-      prebuiltResponse = `Pulse is ${patient.vitalSigns.heartRate} bpm`;
-    } else if (lowerInput.includes("respirations")) {
-      prebuiltResponse = `Respirations are ${patient.vitalSigns.respiratoryRate} per minute`;
-    } else if (lowerInput.includes("oxygen") || lowerInput.includes("spo2")) {
-      prebuiltResponse = `Oxygen saturation is ${patient.vitalSigns.oxygenSaturation}%`;
-    }
-
-    // ✅ If matched to proctor logic, return now
-    if (prebuiltResponse) {
+    if (!message || !role) {
       return {
-        statusCode: 200,
-        body: JSON.stringify({ response: prebuiltResponse }),
+        statusCode: 400,
+        body: JSON.stringify({ error: "Missing message or role." }),
       };
     }
 
-    // 🧑 Patient-style questions (fallback to GPT)
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4-turbo",
-        messages: [
-          {
-            role: "system",
-            content: "You are a 45-year-old EMS patient named John Doe. You are anxious, diaphoretic, and complaining of chest pain. Only respond like a real patient. Don't act like a chatbot or provide vitals unless asked.",
-          },
-          {
-            role: "user",
-            content: userInput,
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 150
-      }),
+    const systemPrompt =
+      role === "proctor"
+        ? `You are the EMS proctor. You provide vitals, scene details, or number of patients upon request. Be brief, accurate, and respond only with proctor-level information.`
+        : `You are the EMS patient in a training scenario. Respond to questions as the patient would. Use emotional and descriptive details like a real patient. Do not provide proctor information such as vitals unless asked explicitly by the proctor.`;
+
+    const model = role === "proctor" ? "gpt-3.5-turbo" : "gpt-4-turbo";
+
+    const completion = await openai.createChatCompletion({
+      model,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: message },
+      ],
     });
 
-    const result = await response.json();
-    const gptReply = result?.choices?.[0]?.message?.content?.trim() || "I don't know how to respond.";
+    const reply = completion.data.choices[0].message.content.trim();
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ response: gptReply }),
+      body: JSON.stringify({ response: reply }),
     };
-
   } catch (error) {
+    console.error("OpenAI API Error:", error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: "Internal Server Error" }),
+      body: JSON.stringify({ error: "OpenAI API error" }),
     };
   }
 };
