@@ -1,58 +1,57 @@
-<!-- Keep everything the same up to your <script> tag -->
-<script>
-  const chat = document.getElementById("chat");
-  const input = document.getElementById("userInput");
-  const micBtn = document.getElementById("micBtn");
-  const endBtn = document.getElementById("endScenarioBtn");
-  const startBtn = document.getElementById("startScenarioBtn");
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EMS Code Sim</title>
+</head>
+<body>
+  <h1>EMS Code Sim</h1>
+  <button onclick="startScenario()">Start Scenario</button>
+  <div id="chat" style="height:300px; overflow-y:auto; border:1px solid #ccc; margin:10px; padding:10px;"></div>
+  <textarea id="userInput" placeholder="Type..." rows="2" style="width:100%;"></textarea>
+  <button onclick="sendMessage()">Send</button>
 
-  let recognition;
-  let listening = false;
-  let timerInterval;
-  let timeRemaining = 15 * 60;
-  let scenarioContext = '';
+  <script>
+    const chat = document.getElementById("chat");
+    const input = document.getElementById("userInput");
+    let scenarioContext = "";
 
-  async function loadScenario() {
-    try {
-      const res = await fetch("/scenarios/chest_pain_001/patient.json");
-      const patient = await res.json();
-
-      scenarioContext = `You are a ${patient.age}-year-old ${patient.sex} experiencing ${patient.chiefComplaint}. 
-      The pain is ${patient.quality} in the ${patient.region}. Onset: ${patient.onset}, Severity: ${patient.severity}/10, Timing: ${patient.timing}. 
-      Medical History: ${patient.medicalHistory.join(", ")}. Medications: ${patient.medications.join(", ")}. Allergies: ${patient.allergies.join(", ")}.`;
-
-      console.log("Scenario context loaded.");
-    } catch (err) {
-      console.error("Failed to load scenario:", err);
+    async function loadScenario() {
+      try {
+        const res = await fetch("/scenarios/chest_pain_001/patient.json");
+        const patient = await res.json();
+        scenarioContext = `You are a ${patient.age}-year-old ${patient.sex} experiencing ${patient.chiefComplaint}.`;
+        console.log("Scenario loaded");
+      } catch (err) {
+        console.error("Error loading scenario:", err);
+      }
     }
-  }
 
-  window.onload = loadScenario;
+    async function sendMessage() {
+      const message = input.value.trim();
+      if (!message) return;
+      chat.innerHTML += `<div><b>You:</b> ${message}</div>`;
+      input.value = "";
 
-  function appendMessage(sender, text) {
-    const msg = document.createElement("div");
-    msg.innerHTML = `<strong>${sender}:</strong> ${text}`;
-    chat.appendChild(msg);
-    chat.scrollTop = chat.scrollHeight;
-  }
+      const res = await fetch("/.netlify/functions/openai", {
+        method: "POST",
+        body: JSON.stringify({
+          message,
+          role: "patient",
+          context: scenarioContext
+        }),
+      });
+      const data = await res.json();
+      chat.innerHTML += `<div><b>Patient:</b> ${data.response}</div>`;
+      chat.scrollTop = chat.scrollHeight;
+    }
 
-  async function sendMessage(textOverride) {
-    const message = textOverride || input.value.trim();
-    if (!message) return;
-    appendMessage("You", message);
-    input.value = "";
+    function startScenario() {
+      chat.innerHTML += `<div><i>Scenario started</i></div>`;
+    }
 
-    const response = await fetch("/.netlify/functions/openai", {
-      method: "POST",
-      body: JSON.stringify({ message, role: "patient", context: scenarioContext }),
-    });
-    const data = await response.json();
-    appendMessage("Patient", data.response);
-
-    setTimeout(() => {
-      if (listening) recognition.start();
-    }, 1000);
-  }
-
-  // ... (keep toggleMic, startScenario, endScenario unchanged)
-</script>
+    window.onload = loadScenario;
+  </script>
+</body>
+</html>
