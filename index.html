@@ -21,6 +21,33 @@
       padding: 1rem;
       text-align: center;
     }
+    #scenarioRow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+    }
+    #startScenarioBtn {
+      background: #00aa00;
+      color: white;
+      border: none;
+      padding: 14px 24px;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    #startScenarioBtn.active {
+      background: #444;
+    }
+    select {
+      width: 100%;
+      max-width: 300px;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
     #chat {
       flex: 1;
       overflow-y: auto;
@@ -73,22 +100,16 @@
     }
     #micBtn.active { background-color: red; }
     #endScenarioBtn { background-color: #cc0000; }
-    select {
-      width: 100%;
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
   </style>
 </head>
 <body>
   <header>
     EMS Code Sim
-    <div style="margin-top: 10px;">
+    <div id="scenarioRow">
       <select id="scenarioSelect" onchange="loadSelectedScenario()">
         <option value="">-- Select Patient Scenario --</option>
       </select>
+      <button id="startScenarioBtn" onclick="startScenario()">Start Scenario</button>
     </div>
   </header>
 
@@ -110,11 +131,14 @@
     const input = document.getElementById("userInput");
     const micBtn = document.getElementById("micBtn");
     const endBtn = document.getElementById("endScenarioBtn");
+    const startBtn = document.getElementById("startScenarioBtn");
     const scenarioSelect = document.getElementById("scenarioSelect");
 
     let recognition;
     let listening = false;
     let scenarioContext = "";
+    let timerInterval;
+    let timeRemaining = 15 * 60;
 
     async function loadPatientList() {
       try {
@@ -148,6 +172,29 @@
       } catch (err) {
         console.error("Error loading patient.json", err);
       }
+    }
+
+    function startScenario() {
+      if (!scenarioContext) {
+        alert("Please select a scenario first.");
+        return;
+      }
+
+      appendMessage("System", "Scenario started.");
+      startBtn.disabled = true;
+      startBtn.classList.add("active");
+
+      timerInterval = setInterval(() => {
+        if (timeRemaining <= 0) {
+          clearInterval(timerInterval);
+          startBtn.textContent = "Time's up!";
+          return;
+        }
+        const minutes = Math.floor(timeRemaining / 60);
+        const seconds = timeRemaining % 60;
+        startBtn.textContent = `${minutes}:${seconds.toString().padStart(2, "0")}`;
+        timeRemaining--;
+      }, 1000);
     }
 
     function appendMessage(sender, text) {
@@ -206,6 +253,8 @@
       input.disabled = true;
       micBtn.disabled = true;
       endBtn.disabled = true;
+      clearInterval(timerInterval);
+      startBtn.textContent = "Scenario Ended";
     }
 
     input.addEventListener("keydown", function (event) {
