@@ -55,56 +55,56 @@
     <input type="text" id="inputBox" placeholder="Type your message and press Enter" />
   </div>
 
-  <script>
+  <script type="module">
+    import { trackAction, vitals } from './js/scenarioTracker.js';
+
     const inputBox = document.getElementById("inputBox");
     const messages = document.getElementById("messages");
     const startBtn = document.getElementById("startBtn");
     const endBtn = document.getElementById("endBtn");
 
     let simulationStarted = false;
-    let userInputs = [];
 
     startBtn.addEventListener("click", () => {
       simulationStarted = true;
-      userInputs = [];
       messages.innerHTML = '';
       appendMessage("You are responding to a 55-year-old male complaining of chest pain at a public park.", "ai");
     });
 
     endBtn.addEventListener("click", () => {
       simulationStarted = false;
-      const feedback = evaluatePerformance(userInputs);
-      appendMessage(feedback, "ai");
+      appendMessage(`Final Vitals:\nBP: ${vitals.bp}, Pulse: ${vitals.pulse}, RR: ${vitals.rr}, SpO2: ${vitals.spo2}, Skin: ${vitals.skin}`, "ai");
     });
 
     inputBox.addEventListener("keypress", async function (e) {
       if (e.key === "Enter" && simulationStarted) {
         const text = inputBox.value.trim();
         if (!text) return;
-        userInputs.push(text.toLowerCase());
+
         appendMessage(text, "user");
         inputBox.value = "";
 
+        trackAction(text); // ✅ log user action and trigger vitals/escalation
+
         const payload = {
           message: text,
-          role: "patient",
-          context: "You are simulating a realistic EMS patient. Respond to EMT assessment questions like a real patient would."
+          role: "auto",
+          context: "You are a simulated EMS patient or proctor."
         };
 
-        try {
-          const res = await fetch("/.netlify/functions/openai", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-          });
+        const res = await fetch("/.netlify/functions/openai", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
 
-          const data = await res.json();
-          appendMessage(data.response || "⚠️ No response received.", "ai");
-        } catch (err) {
-          console.error("❌ Fetch error:", err);
-          appendMessage("❌ Error: " + err.message, "ai");
-        }
+        const data = await res.json();
+        appendMessage(data.response || "⚠️ No response received.", "ai");
       }
+    });
+
+    window.addEventListener("proctorCue", e => {
+      appendMessage(e.detail, "ai");
     });
 
     function appendMessage(text, role) {
@@ -113,32 +113,6 @@
       div.textContent = text;
       messages.appendChild(div);
       messages.scrollTop = messages.scrollHeight;
-    }
-
-    function evaluatePerformance(inputs) {
-      const checklist = [
-        { item: "scene safe", keywords: ["scene safe", "bsi", "ppe"] },
-        { item: "primary assessment", keywords: ["avpu", "airway", "breathing", "circulation"] },
-        { item: "history taking", keywords: ["opqrst", "sample", "onset", "provokes", "quality"] },
-        { item: "vitals", keywords: ["blood pressure", "pulse", "respirations", "spo2", "bgl"] },
-        { item: "treatment", keywords: ["oxygen", "asa", "nitro", "transport"] }
-      ];
-
-      let score = 0;
-      let feedback = [];
-
-      for (let step of checklist) {
-        const matched = step.keywords.some(kw =>
-          inputs.some(input => input.includes(kw))
-        );
-        if (matched) {
-          score += 1;
-        } else {
-          feedback.push(`🔴 Missed: ${step.item}`);
-        }
-      }
-
-      return `✅ Scenario complete.\nScore: ${score}/5\n\n${feedback.join("\n")}\n\nTips: Review your scene safety, assessment flow, and treatment priorities.`;
     }
   </script>
 </body>
