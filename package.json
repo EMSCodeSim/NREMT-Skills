@@ -1,14 +1,16 @@
 {
-  "name": "nremt-simulator",
+  "name": "nremt-skills-sim",
   "version": "1.0.0",
-  "description": "EMS Patient Simulator with AI Proctor and Patient",
+  "description": "NREMT Skills Simulation with AI",
+  "type": "module",
   "main": "index.js",
   "scripts": {
-    "build": "echo 'No build step required'",
     "start": "netlify dev"
   },
   "dependencies": {
     "openai": "^4.0.0"
   },
-  "license": "MIT"
+  "devDependencies": {
+    "netlify-cli": "^15.0.0"
+  }
 }
