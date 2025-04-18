@@ -6,12 +6,15 @@ const openai = new OpenAI({
 
 export default async (event) => {
   try {
-    const { message, role, context } = event.body;
+    const { message, role, context } = JSON.parse(event.body);
 
     if (!message || !role || !context) {
       return new Response(
         JSON.stringify({ response: "Missing message, role, or context." }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
       );
     }
 
@@ -30,7 +33,10 @@ export default async (event) => {
 
     return new Response(
       JSON.stringify({ response: reply || "⚠️ GPT returned no message." }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }
     );
   } catch (err) {
     console.error("❌ OpenAI Error:", err.message);
@@ -39,7 +45,10 @@ export default async (event) => {
         response: "There was an error contacting ChatGPT.",
         error: err.message,
       }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
     );
   }
 };
