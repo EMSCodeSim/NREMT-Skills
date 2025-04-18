@@ -11,7 +11,6 @@
       margin: 0;
       padding: 0;
     }
-
     #chat-container {
       max-width: 900px;
       margin: 30px auto;
@@ -20,75 +19,38 @@
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
-
-    h1 {
-      text-align: center;
-      margin-bottom: 15px;
-    }
-
-    #button-bar {
-      text-align: center;
-      margin-bottom: 15px;
-    }
-
+    h1 { text-align: center; margin-bottom: 15px; }
+    #button-bar { text-align: center; margin-bottom: 15px; }
     button {
-      margin: 5px;
-      padding: 10px 20px;
-      font-size: 16px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
+      margin: 5px; padding: 10px 20px; font-size: 16px;
+      border: none; border-radius: 5px; cursor: pointer;
     }
-
     #startBtn { background: #007bff; color: white; }
-
+    #endBtn { background: #dc3545; color: white; }
     #messages {
-      max-height: 500px;
-      overflow-y: auto;
-      border: 1px solid #ccc;
-      padding: 10px;
-      border-radius: 5px;
-      margin-bottom: 10px;
+      max-height: 500px; overflow-y: auto;
+      border: 1px solid #ccc; padding: 10px;
+      border-radius: 5px; margin-bottom: 10px;
     }
-
     .bubble {
-      padding: 10px;
-      margin: 5px 0;
-      border-radius: 5px;
-      max-width: 80%;
-      word-wrap: break-word;
+      padding: 10px; margin: 5px 0; border-radius: 5px;
+      max-width: 80%; word-wrap: break-word;
     }
-
-    .user {
-      background-color: #cfe2ff;
-      text-align: right;
-      margin-left: auto;
-    }
-
-    .ai {
-      background-color: #d1e7dd;
-      text-align: left;
-      margin-right: auto;
-    }
-
+    .user { background-color: #cfe2ff; text-align: right; margin-left: auto; }
+    .ai { background-color: #d1e7dd; text-align: left; margin-right: auto; }
     #inputBox {
-      width: 100%;
-      padding: 12px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-      font-size: 16px;
-      box-sizing: border-box;
+      width: 100%; padding: 12px; border-radius: 5px;
+      border: 1px solid #ccc; font-size: 16px; box-sizing: border-box;
     }
   </style>
 </head>
 <body>
   <div id="chat-container">
     <h1>🚑 EMS Code Sim</h1>
-
     <div id="button-bar">
       <button id="startBtn">▶️ Start Simulation</button>
+      <button id="endBtn">⛔ End Scenario</button>
     </div>
-
     <div id="messages"></div>
     <input type="text" id="inputBox" placeholder="Type your message and press Enter" />
   </div>
@@ -97,19 +59,29 @@
     const inputBox = document.getElementById("inputBox");
     const messages = document.getElementById("messages");
     const startBtn = document.getElementById("startBtn");
+    const endBtn = document.getElementById("endBtn");
 
     let simulationStarted = false;
+    let userInputs = [];
 
     startBtn.addEventListener("click", () => {
       simulationStarted = true;
+      userInputs = [];
+      messages.innerHTML = '';
       appendMessage("You are responding to a 55-year-old male complaining of chest pain at a public park.", "ai");
+    });
+
+    endBtn.addEventListener("click", () => {
+      simulationStarted = false;
+      const feedback = evaluatePerformance(userInputs);
+      appendMessage(feedback, "ai");
     });
 
     inputBox.addEventListener("keypress", async function (e) {
       if (e.key === "Enter" && simulationStarted) {
         const text = inputBox.value.trim();
         if (!text) return;
-
+        userInputs.push(text.toLowerCase());
         appendMessage(text, "user");
         inputBox.value = "";
 
@@ -119,8 +91,6 @@
           context: "You are simulating a realistic EMS patient. Respond to EMT assessment questions like a real patient would."
         };
 
-        console.log("📤 Sending to function:", payload);
-
         try {
           const res = await fetch("/.netlify/functions/openai", {
             method: "POST",
@@ -129,7 +99,6 @@
           });
 
           const data = await res.json();
-          console.log("📥 Response:", data);
           appendMessage(data.response || "⚠️ No response received.", "ai");
         } catch (err) {
           console.error("❌ Fetch error:", err);
@@ -144,6 +113,32 @@
       div.textContent = text;
       messages.appendChild(div);
       messages.scrollTop = messages.scrollHeight;
+    }
+
+    function evaluatePerformance(inputs) {
+      const checklist = [
+        { item: "scene safe", keywords: ["scene safe", "bsi", "ppe"] },
+        { item: "primary assessment", keywords: ["avpu", "airway", "breathing", "circulation"] },
+        { item: "history taking", keywords: ["opqrst", "sample", "onset", "provokes", "quality"] },
+        { item: "vitals", keywords: ["blood pressure", "pulse", "respirations", "spo2", "bgl"] },
+        { item: "treatment", keywords: ["oxygen", "asa", "nitro", "transport"] }
+      ];
+
+      let score = 0;
+      let feedback = [];
+
+      for (let step of checklist) {
+        const matched = step.keywords.some(kw =>
+          inputs.some(input => input.includes(kw))
+        );
+        if (matched) {
+          score += 1;
+        } else {
+          feedback.push(`🔴 Missed: ${step.item}`);
+        }
+      }
+
+      return `✅ Scenario complete.\nScore: ${score}/5\n\n${feedback.join("\n")}\n\nTips: Review your scene safety, assessment flow, and treatment priorities.`;
     }
   </script>
 </body>
