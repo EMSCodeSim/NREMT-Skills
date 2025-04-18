@@ -15,13 +15,29 @@ document.addEventListener("DOMContentLoaded", () => {
     chatDisplay.appendChild(userMessage);
     scrollChatToBottom();
 
+    // Detect if message is for proctor
+    const proctorTriggers = [
+      "blood pressure", "pulse", "breath sounds", "respirations",
+      "o2 sat", "oxygen saturation", "blood sugar", "bgl",
+      "bsi", "scene safe", "give", "administer",
+      "oxygen", "aed", "nitro", "aspirin"
+    ];
+
+    const isProctorMessage = proctorTriggers.some(trigger =>
+      input.toLowerCase().includes(trigger)
+    );
+
+    const role = isProctorMessage ? "proctor" : "user";
+    const model = isProctorMessage ? "gpt-3.5-turbo" : "gpt-4-turbo";
+    const speaker = isProctorMessage ? "Proctor" : "Patient";
+
     try {
       const response = await fetch("/.netlify/functions/openai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: input,
-          role: "user",
+          role: role,
           context: currentScenarioContext || "No scenario loaded"
         }),
       });
@@ -29,10 +45,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await response.json();
       const reply = data.response || "I'm sorry, I can't respond right now.";
 
-      const patientMessage = document.createElement("p");
-      patientMessage.className = "ai-message";
-      patientMessage.textContent = `Patient: ${reply}`;
-      chatDisplay.appendChild(patientMessage);
+      const replyMessage = document.createElement("p");
+      replyMessage.className = "ai-message";
+      replyMessage.textContent = `${speaker}: ${reply}`;
+      chatDisplay.appendChild(replyMessage);
     } catch (error) {
       console.error("Fetch error:", error);
     }
