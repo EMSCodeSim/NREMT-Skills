@@ -10,39 +10,38 @@ exports.handler = async (event) => {
   try {
     const { message, role, context } = JSON.parse(event.body);
 
-    if (!message || !role) {
+    if (!message || !role || !context) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: "Missing message or role." }),
+        body: JSON.stringify({ error: "Missing message, role, or context." }),
       };
     }
 
-    const systemPrompt = role === "patient"
-      ? context || "You are a simulated EMS patient. Only respond with what a patient would realistically say."
-      : "You are the EMS proctor. Only respond with vitals or scene info when asked.";
-
+    // Choose model based on role
     const model = role === "proctor" ? "gpt-3.5-turbo" : "gpt-4-turbo";
 
-    const chatResponse = await openai.createChatCompletion({
+    const systemPrompt = context;
+
+    const completion = await openai.createChatCompletion({
       model,
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: message },
+        { role: "user", content: message }
       ],
       temperature: 0.7,
     });
 
-    const reply = chatResponse?.data?.choices?.[0]?.message?.content?.trim();
+    const reply = completion?.data?.choices?.[0]?.message?.content?.trim() || "I'm sorry, I didn’t understand that.";
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ response: reply || "I'm sorry, I didn't understand that." }),
+      body: JSON.stringify({ response: reply }),
     };
-  } catch (error) {
-    console.error("OpenAI error:", error);
+  } catch (err) {
+    console.error("OpenAI API error:", err.message);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: "Server error: " + error.message }),
+      body: JSON.stringify({ response: "An error occurred while processing your request." }),
     };
   }
 };
