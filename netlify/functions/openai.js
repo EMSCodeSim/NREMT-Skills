@@ -4,12 +4,24 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// ✅ Read ReadableStream manually
+async function parseRequestBody(stream) {
+  const reader = stream.getReader();
+  const decoder = new TextDecoder("utf-8");
+  let result = "";
+  let done, value;
+
+  while (!done) {
+    ({ done, value } = await reader.read());
+    result += decoder.decode(value || new Uint8Array(), { stream: !done });
+  }
+
+  return JSON.parse(result);
+}
+
 export default async (event) => {
   try {
-    const isString = typeof event.body === "string";
-    console.log("🔥 Raw event body:", event.body);
-
-    const body = isString ? JSON.parse(event.body) : event.body;
+    const body = await parseRequestBody(event.body);
     const { message, role, context } = body;
 
     console.log("📦 Parsed message:", message);
