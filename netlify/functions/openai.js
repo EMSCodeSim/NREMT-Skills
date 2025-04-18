@@ -6,8 +6,9 @@ const openai = new OpenAI({
 
 export default async (event) => {
   try {
-    // ✅ Netlify passes event.body as a string — parse it directly
-    const { message, role, context } = JSON.parse(event.body);
+    // ✅ Only parse if it's a string
+    const body = typeof event.body === "string" ? JSON.parse(event.body) : event.body;
+    const { message, role, context } = body;
 
     console.log("📦 Parsed message:", message);
     console.log("📦 Parsed role:", role);
