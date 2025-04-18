@@ -1,158 +1,111 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title>EMS Code Sim</title>
-  <style>
-    * { box-sizing: border-box; }
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      font-family: Arial, sans-serif;
-      background: #f0f4f8;
-      overflow: hidden;
-    }
-    body { display: flex; flex-direction: column; }
-    header {
-      background: #003366;
-      color: white;
-      padding: 1rem;
-      text-align: center;
-      font-size: 1.5rem;
-    }
-    #chat {
-      flex: 1;
-      overflow-y: auto;
-      padding: 1rem;
-      background: white;
-      border-top: 1px solid #ccc;
-      border-bottom: 1px solid #ccc;
-      scroll-behavior: smooth;
-    }
-    #inputSection {
-      padding: 0.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .input-row { display: flex; gap: 10px; }
-    textarea {
-      flex: 1;
-      padding: 12px;
-      font-size: 16px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      resize: none;
-      height: 64px;
-      line-height: 1.4;
-    }
-    .send-button {
-      padding: 16px 28px;
-      font-size: 16px;
-      border: none;
-      border-radius: 6px;
-      background: #0055aa;
-      color: white;
-      cursor: pointer;
-    }
-    .button-row {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-    }
-    .button-row button {
-      flex: 1;
-      padding: 16px;
-      font-size: 16px;
-      border: none;
-      border-radius: 6px;
-      background: #0055aa;
-      color: white;
-      cursor: pointer;
-    }
-    #micBtn.active { background-color: red; }
-    #endScenarioBtn { background-color: #cc0000; }
-  </style>
-</head>
-<body>
-  <header>EMS Code Sim</header>
+<!-- Add this inside your <script> tag -->
+<script>
+  const chat = document.getElementById("chat");
+  const input = document.getElementById("userInput");
+  const micBtn = document.getElementById("micBtn");
+  const endBtn = document.getElementById("endScenarioBtn");
+  const startBtn = document.getElementById("startScenarioBtn");
 
-  <div id="chat"></div>
+  let recognition;
+  let listening = false;
+  let scenarioContext = "";
+  let proctorContext = "";
 
-  <div id="inputSection">
-    <div class="input-row">
-      <textarea id="userInput" placeholder="Type or speak..." rows="2"></textarea>
-      <button class="send-button" onclick="sendMessage()">Send</button>
-    </div>
-    <div class="button-row">
-      <button id="micBtn" onclick="toggleMic()">🎤 Mic</button>
-      <button id="endScenarioBtn" onclick="endScenario()">End Scenario</button>
-    </div>
-  </div>
+  async function startScenario() {
+    try {
+      const dispatch = await fetch("/scenarios/chest_pain_001/dispatch.txt").then(r => r.text());
+      appendMessage("Dispatch", dispatch);
 
-  <script>
-    const chat = document.getElementById("chat");
-    const input = document.getElementById("userInput");
-    const micBtn = document.getElementById("micBtn");
-    const endBtn = document.getElementById("endScenarioBtn");
-
-    let recognition;
-    let listening = false;
-    let scenarioContext = "";
-
-    async function loadDefaultScenario() {
-      try {
-        const res = await fetch("/scenarios/chest_pain_001/patient.json");
-        const patient = await res.json();
-
-        scenarioContext = `You are a ${patient.age}-year-old ${patient.sex} experiencing ${patient.chiefComplaint}. 
+      const patient = await fetch("/scenarios/chest_pain_001/patient.json").then(r => r.json());
+      scenarioContext = `You are a ${patient.age}-year-old ${patient.sex} experiencing ${patient.chiefComplaint}. 
         The pain is ${patient.quality} in the ${patient.region}. Onset: ${patient.onset}, Severity: ${patient.severity}/10, Timing: ${patient.timing}. 
         Medical History: ${patient.medicalHistory.join(", ")}. Medications: ${patient.medications.join(", ")}. Allergies: ${patient.allergies.join(", ")}.`;
 
-        appendMessage("System", "Chest pain scenario loaded.");
-      } catch (err) {
-        console.error("Failed to load default scenario:", err);
-        appendMessage("System", "Failed to load chest pain scenario.");
-      }
+      const proctor = await fetch("/scenarios/chest_pain_001/proctor.json").then(r => r.json());
+      proctorContext = proctor.instructions || "You are the proctor. Only answer when asked for vitals, scene info, or when user needs scoring feedback.";
+
+      appendMessage("System", "Chest pain scenario loaded.");
+      startBtn.disabled = true;
+      startBtn.textContent = "Scenario Running...";
+    } catch (err) {
+      console.error("Scenario load failed", err);
+      appendMessage("System", "Error loading scenario.");
+    }
+  }
+
+  function appendMessage(sender, text) {
+    const msg = document.createElement("div");
+    msg.innerHTML = `<strong>${sender}:</strong> ${text}`;
+    chat.appendChild(msg);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  async function sendMessage(textOverride) {
+    const message = textOverride || input.value.trim();
+    if (!message || (!scenarioContext && !proctorContext)) return;
+
+    appendMessage("You", message);
+    input.value = "";
+
+    const role = message.toLowerCase().includes("blood pressure") || message.toLowerCase().includes("vitals")
+      ? "proctor"
+      : "patient";
+
+    const response = await fetch("/.netlify/functions/openai", {
+      method: "POST",
+      body: JSON.stringify({
+        message,
+        role,
+        context: role === "proctor" ? proctorContext : scenarioContext
+      }),
+    });
+
+    const data = await response.json();
+    appendMessage(role === "proctor" ? "Proctor" : "Patient", data.response);
+
+    setTimeout(() => {
+      if (listening) recognition.start();
+    }, 1000);
+  }
+
+  function toggleMic() {
+    if (!recognition) {
+      recognition = new webkitSpeechRecognition();
+      recognition.lang = "en-US";
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        sendMessage(transcript);
+      };
+
+      recognition.onend = () => micBtn.classList.remove("active");
     }
 
-    function appendMessage(sender, text) {
-      const msg = document.createElement("div");
-      msg.innerHTML = `<strong>${sender}:</strong> ${text}`;
-      chat.appendChild(msg);
-      chat.scrollTop = chat.scrollHeight;
+    if (!listening) {
+      recognition.start();
+      micBtn.classList.add("active");
+      listening = true;
+    } else {
+      recognition.stop();
+      micBtn.classList.remove("active");
+      listening = false;
     }
+  }
 
-    async function sendMessage(textOverride) {
-      const message = textOverride || input.value.trim();
-      if (!message) return;
-      appendMessage("You", message);
-      input.value = "";
+  function endScenario() {
+    appendMessage("System", "Scenario ended.");
+    input.disabled = true;
+    micBtn.disabled = true;
+    endBtn.disabled = true;
+    startBtn.textContent = "Scenario Ended";
+  }
 
-      const response = await fetch("/.netlify/functions/openai", {
-        method: "POST",
-        body: JSON.stringify({ message, role: "patient", context: scenarioContext }),
-      });
-      const data = await response.json();
-      appendMessage("Patient", data.response);
-
-      setTimeout(() => {
-        if (listening) recognition.start();
-      }, 1000);
+  input.addEventListener("keydown", function (event) {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      sendMessage();
     }
-
-    function toggleMic() {
-      if (!recognition) {
-        recognition = new webkitSpeechRecognition();
-        recognition.lang = "en-US";
-        recognition.continuous = false;
-        recognition.interimResults = false;
-
-        recognition.onresult = (event) => {
-          const transcript = event.results[0][0].transcript;
-          sendMessage(transcript);
-        };
-
-        recognition.onend = () => mic
+  });
+</script>
