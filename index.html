@@ -91,7 +91,7 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               message: text,
-              role: "patient",  // Change to "proctor" if needed
+              role: "patient",  // Change to "proctor" if testing proctor responses
               context: "You are simulating a realistic EMS patient. Respond appropriately to EMT assessment questions."
             })
           });
