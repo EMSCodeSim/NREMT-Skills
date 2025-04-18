@@ -1,44 +1,37 @@
-// netlify/functions/openai.js
-const OpenAI = require("openai");
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY, // Set this in your Netlify site environment variables
-});
-
 exports.handler = async (event) => {
   try {
     const { message, role, context } = JSON.parse(event.body);
-
     console.log("🔥 Incoming Request");
     console.log("Message:", message);
     console.log("Role:", role);
     console.log("Context preview:", context?.substring(0, 100) + "...");
 
-    // Validate input
     if (!message || !role || !context) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ response: "Missing message, role, or context." }),
+        body: JSON.stringify({
+          response: "Missing message, role, or context.",
+        }),
       };
     }
 
-    // Choose model
+    // Dynamic import of openai
+    const { OpenAI } = await import("openai");
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
     const model = role === "proctor" ? "gpt-3.5-turbo" : "gpt-4-turbo";
 
-    // Send to OpenAI
     const chat = await openai.chat.completions.create({
       model,
       messages: [
         { role: "system", content: context },
-        { role: "user", content: message }
+        { role: "user", content: message },
       ],
       temperature: 0.7,
     });
 
-    // Extract reply
     const reply = chat?.choices?.[0]?.message?.content?.trim();
-
-    console.log("✅ GPT Response:", reply);
+    console.log("✅ OpenAI Reply:", reply);
 
     return {
       statusCode: 200,
