@@ -41,8 +41,6 @@
     }
 
     #startBtn { background: #007bff; color: white; }
-    #micBtn { background: #28a745; color: white; }
-    #endBtn { background: #dc3545; color: white; }
 
     #messages {
       max-height: 500px;
@@ -89,22 +87,17 @@
 
     <div id="button-bar">
       <button id="startBtn">▶️ Start Simulation</button>
-      <button id="micBtn">🎤 Mic</button>
-      <button id="endBtn">⛔ End Scenario</button>
     </div>
 
     <div id="messages"></div>
-    <input type="text" id="inputBox" placeholder="Type or speak your response..." />
+    <input type="text" id="inputBox" placeholder="Type your message and press Enter" />
   </div>
 
   <script>
     const startBtn = document.getElementById("startBtn");
-    const micBtn = document.getElementById("micBtn");
-    const endBtn = document.getElementById("endBtn");
     const inputBox = document.getElementById("inputBox");
     const messages = document.getElementById("messages");
 
-    let recognition;
     let simulationStarted = false;
 
     startBtn.addEventListener("click", () => {
@@ -112,48 +105,10 @@
       appendMessage("You are responding to a 55-year-old male complaining of chest pain at a public park.", "ai");
     });
 
-    endBtn.addEventListener("click", () => {
-      if (!simulationStarted) return;
-      simulationStarted = false;
-      appendMessage("✅ Scenario ended. Please complete your handoff report.", "ai");
-    });
-
-    micBtn.addEventListener("click", () => {
-      if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
-        alert("Speech recognition not supported in this browser.");
-        return;
-      }
-
-      recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-      recognition.lang = "en-US";
-      recognition.start();
-
-      micBtn.textContent = "🎤 Listening...";
-
-      recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        inputBox.value = transcript;
-        inputBox.focus();
-        micBtn.textContent = "🎤 Mic";
-      };
-
-      recognition.onerror = (event) => {
-        console.error("Speech error:", event.error);
-        micBtn.textContent = "🎤 Mic";
-      };
-
-      recognition.onend = () => {
-        micBtn.textContent = "🎤 Mic";
-      };
-    });
-
     inputBox.addEventListener("keypress", async function (e) {
-      if (e.key === "Enter") {
+      if (e.key === "Enter" && simulationStarted) {
         const text = inputBox.value.trim();
-        if (!text || !simulationStarted) {
-          appendMessage("⚠️ Start a simulation before sending messages.", "ai");
-          return;
-        }
+        if (!text) return;
 
         appendMessage(text, "user");
         inputBox.value = "";
@@ -164,6 +119,8 @@
           context: "You are simulating a realistic EMS patient. Respond to EMT assessment questions like a real patient would."
         };
 
+        console.log("📤 Sending payload to Netlify:", payload);
+
         try {
           const res = await fetch("/.netlify/functions/openai", {
             method: "POST",
@@ -172,6 +129,7 @@
           });
 
           const data = await res.json();
+          console.log("📥 Got response from Netlify:", data);
           appendMessage(data.response || "⚠️ No response received.", "ai");
         } catch (err) {
           console.error("❌ Fetch error:", err);
