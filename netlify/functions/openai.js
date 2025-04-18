@@ -1,14 +1,32 @@
 import { OpenAI } from "openai";
 
+// Helper to read raw body in Netlify ESM
+async function readRequestBody(event) {
+  if (typeof event.body === "string") {
+    return JSON.parse(event.body);
+  } else if (event.body) {
+    return event.body;
+  } else {
+    const decoder = new TextDecoder("utf-8");
+    const stream = event.body || event.rawBody;
+    const reader = stream.getReader();
+    let result = '';
+    let done, value;
+    while (!done) {
+      ({ done, value } = await reader.read());
+      result += decoder.decode(value || new Uint8Array(), { stream: !done });
+    }
+    return JSON.parse(result);
+  }
+}
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
 export default async (event) => {
   try {
-    // ✅ Read the body from the stream properly
-    const rawBody = await event.request.text();
-    const { message, role, context } = JSON.parse(rawBody);
+    const { message, role, context } = await readRequestBody(event);
 
     console.log("📦 Parsed message:", message);
     console.log("📦 Parsed role:", role);
