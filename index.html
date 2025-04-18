@@ -20,33 +20,7 @@
       color: white;
       padding: 1rem;
       text-align: center;
-    }
-    #scenarioRow {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      padding: 10px;
-    }
-    #startScenarioBtn {
-      background: #00aa00;
-      color: white;
-      border: none;
-      padding: 14px 24px;
-      font-size: 16px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    #startScenarioBtn.active {
-      background: #444;
-    }
-    select {
-      width: 100%;
-      max-width: 300px;
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
+      font-size: 1.5rem;
     }
     #chat {
       flex: 1;
@@ -103,15 +77,7 @@
   </style>
 </head>
 <body>
-  <header>
-    EMS Code Sim
-    <div id="scenarioRow">
-      <select id="scenarioSelect" onchange="loadSelectedScenario()">
-        <option value="">-- Select Patient Scenario --</option>
-      </select>
-      <button id="startScenarioBtn" onclick="startScenario()">Start Scenario</button>
-    </div>
-  </header>
+  <header>EMS Code Sim</header>
 
   <div id="chat"></div>
 
@@ -131,70 +97,25 @@
     const input = document.getElementById("userInput");
     const micBtn = document.getElementById("micBtn");
     const endBtn = document.getElementById("endScenarioBtn");
-    const startBtn = document.getElementById("startScenarioBtn");
-    const scenarioSelect = document.getElementById("scenarioSelect");
 
     let recognition;
     let listening = false;
     let scenarioContext = "";
-    let timerInterval;
-    let timeRemaining = 15 * 60;
 
-    async function loadPatientList() {
+    async function loadDefaultScenario() {
       try {
-        const res = await fetch("/data/patients.json");
-        const patients = await res.json();
-
-        patients.forEach(p => {
-          const option = document.createElement("option");
-          option.value = p.folder;
-          option.textContent = `${p.name} - ${p.chiefComplaint}`;
-          scenarioSelect.appendChild(option);
-        });
-      } catch (err) {
-        console.error("Error loading patients.json", err);
-      }
-    }
-
-    async function loadSelectedScenario() {
-      const folder = scenarioSelect.value;
-      if (!folder) return;
-
-      try {
-        const res = await fetch(`/scenarios/${folder}/patient.json`);
+        const res = await fetch("/scenarios/chest_pain_001/patient.json");
         const patient = await res.json();
 
         scenarioContext = `You are a ${patient.age}-year-old ${patient.sex} experiencing ${patient.chiefComplaint}. 
         The pain is ${patient.quality} in the ${patient.region}. Onset: ${patient.onset}, Severity: ${patient.severity}/10, Timing: ${patient.timing}. 
         Medical History: ${patient.medicalHistory.join(", ")}. Medications: ${patient.medications.join(", ")}. Allergies: ${patient.allergies.join(", ")}.`;
 
-        appendMessage("System", `Scenario "${folder}" loaded.`);
+        appendMessage("System", "Chest pain scenario loaded.");
       } catch (err) {
-        console.error("Error loading patient.json", err);
+        console.error("Failed to load default scenario:", err);
+        appendMessage("System", "Failed to load chest pain scenario.");
       }
-    }
-
-    function startScenario() {
-      if (!scenarioContext) {
-        alert("Please select a scenario first.");
-        return;
-      }
-
-      appendMessage("System", "Scenario started.");
-      startBtn.disabled = true;
-      startBtn.classList.add("active");
-
-      timerInterval = setInterval(() => {
-        if (timeRemaining <= 0) {
-          clearInterval(timerInterval);
-          startBtn.textContent = "Time's up!";
-          return;
-        }
-        const minutes = Math.floor(timeRemaining / 60);
-        const seconds = timeRemaining % 60;
-        startBtn.textContent = `${minutes}:${seconds.toString().padStart(2, "0")}`;
-        timeRemaining--;
-      }, 1000);
     }
 
     function appendMessage(sender, text) {
@@ -234,37 +155,4 @@
           sendMessage(transcript);
         };
 
-        recognition.onend = () => micBtn.classList.remove("active");
-      }
-
-      if (!listening) {
-        recognition.start();
-        micBtn.classList.add("active");
-        listening = true;
-      } else {
-        recognition.stop();
-        micBtn.classList.remove("active");
-        listening = false;
-      }
-    }
-
-    function endScenario() {
-      appendMessage("System", "Scenario ended.");
-      input.disabled = true;
-      micBtn.disabled = true;
-      endBtn.disabled = true;
-      clearInterval(timerInterval);
-      startBtn.textContent = "Scenario Ended";
-    }
-
-    input.addEventListener("keydown", function (event) {
-      if (event.key === "Enter" && !event.shiftKey) {
-        event.preventDefault();
-        sendMessage();
-      }
-    });
-
-    window.onload = loadPatientList;
-  </script>
-</body>
-</html>
+        recognition.onend = () => mic
