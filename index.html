@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>EMS Code Sim</title>
+  <link rel="stylesheet" href="styles/style.css" />
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -19,101 +20,102 @@
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
-    h1 { text-align: center; margin-bottom: 15px; }
-    #button-bar { text-align: center; margin-bottom: 15px; }
+    h1 {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    #button-bar {
+      text-align: center;
+      margin-bottom: 15px;
+    }
     button {
-      margin: 5px; padding: 10px 20px; font-size: 16px;
-      border: none; border-radius: 5px; cursor: pointer;
+      margin: 5px;
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
     }
-    #startBtn { background: #007bff; color: white; }
-    #endBtn { background: #dc3545; color: white; }
+    #start-button {
+      background: #007bff;
+      color: white;
+    }
+    #end-button {
+      background: #dc3545;
+      color: white;
+    }
     #messages {
-      max-height: 500px; overflow-y: auto;
-      border: 1px solid #ccc; padding: 10px;
-      border-radius: 5px; margin-bottom: 10px;
+      max-height: 500px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 10px;
     }
-    .bubble {
-      padding: 10px; margin: 5px 0; border-radius: 5px;
-      max-width: 80%; word-wrap: break-word;
+    .chat-box {
+      min-height: 300px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 5px;
+      overflow-y: auto;
+      background: #f9f9f9;
     }
-    .user { background-color: #cfe2ff; text-align: right; margin-left: auto; }
-    .ai { background-color: #d1e7dd; text-align: left; margin-right: auto; }
-    #inputBox {
-      width: 100%; padding: 12px; border-radius: 5px;
-      border: 1px solid #ccc; font-size: 16px; box-sizing: border-box;
+    .user-message {
+      text-align: right;
+      color: blue;
+      margin: 5px 0;
+    }
+    .ai-message {
+      text-align: left;
+      color: green;
+      margin: 5px 0;
+    }
+    .system-message {
+      text-align: center;
+      font-style: italic;
+      color: #555;
+      margin: 10px 0;
+    }
+    #input-area {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    #user-input {
+      flex-grow: 1;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    #send-button {
+      background-color: #28a745;
+      color: white;
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
   <div id="chat-container">
-    <h1>🚑 EMS Code Sim</h1>
+    <h1>EMS Code Sim</h1>
+
     <div id="button-bar">
-      <button id="startBtn">▶️ Start Simulation</button>
-      <button id="endBtn">⛔ End Scenario</button>
+      <button id="start-button">Start Scenario</button>
+      <button id="end-button">End Scenario</button>
     </div>
-    <div id="messages"></div>
-    <input type="text" id="inputBox" placeholder="Type your message and press Enter" />
+
+    <div id="chat-display" class="chat-box"></div>
+
+    <div id="input-area">
+      <input type="text" id="user-input" placeholder="Type your message..." />
+      <button id="send-button">Send</button>
+    </div>
   </div>
 
-  <script type="module">
-    import { trackAction, vitals } from './js/scenarioTracker.js';
-
-    const inputBox = document.getElementById("inputBox");
-    const messages = document.getElementById("messages");
-    const startBtn = document.getElementById("startBtn");
-    const endBtn = document.getElementById("endBtn");
-
-    let simulationStarted = false;
-
-    startBtn.addEventListener("click", () => {
-      simulationStarted = true;
-      messages.innerHTML = '';
-      appendMessage("You are responding to a 55-year-old male complaining of chest pain at a public park.", "ai");
-    });
-
-    endBtn.addEventListener("click", () => {
-      simulationStarted = false;
-      appendMessage(`Final Vitals:\nBP: ${vitals.bp}, Pulse: ${vitals.pulse}, RR: ${vitals.rr}, SpO2: ${vitals.spo2}, Skin: ${vitals.skin}`, "ai");
-    });
-
-    inputBox.addEventListener("keypress", async function (e) {
-      if (e.key === "Enter" && simulationStarted) {
-        const text = inputBox.value.trim();
-        if (!text) return;
-
-        appendMessage(text, "user");
-        inputBox.value = "";
-
-        trackAction(text); // ✅ log user action and trigger vitals/escalation
-
-        const payload = {
-          message: text,
-          role: "auto",
-          context: "You are a simulated EMS patient or proctor."
-        };
-
-        const res = await fetch("/.netlify/functions/openai", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-
-        const data = await res.json();
-        appendMessage(data.response || "⚠️ No response received.", "ai");
-      }
-    });
-
-    window.addEventListener("proctorCue", e => {
-      appendMessage(e.detail, "ai");
-    });
-
-    function appendMessage(text, role) {
-      const div = document.createElement("div");
-      div.className = "bubble " + role;
-      div.textContent = text;
-      messages.appendChild(div);
-      messages.scrollTop = messages.scrollHeight;
-    }
-  </script>
+  <script src="scripts/app.js"></script>
 </body>
 </html>
