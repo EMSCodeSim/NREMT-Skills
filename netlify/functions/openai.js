@@ -6,8 +6,10 @@ const openai = new OpenAI({
 
 export default async (event) => {
   try {
-    // ✅ Only parse if it's a string
-    const body = typeof event.body === "string" ? JSON.parse(event.body) : event.body;
+    const isString = typeof event.body === "string";
+    console.log("🔥 Raw event body:", event.body);
+
+    const body = isString ? JSON.parse(event.body) : event.body;
     const { message, role, context } = body;
 
     console.log("📦 Parsed message:", message);
