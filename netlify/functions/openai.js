@@ -10,50 +10,46 @@ exports.handler = async (event) => {
   try {
     const { message, role, context } = JSON.parse(event.body);
 
-    console.log("🔥 Incoming Request ------------------------");
+    console.log("🔥 Incoming Request");
     console.log("Message:", message);
     console.log("Role:", role);
-    console.log("Context preview:", context?.slice(0, 100) + "...");
+    console.log("Context:", context?.substring(0, 100) + "...");
 
     if (!message || !role || !context) {
-      console.log("❌ Missing message, role, or context");
       return {
         statusCode: 400,
-        body: JSON.stringify({
-          response: "Error: Missing required fields.",
-        }),
+        body: JSON.stringify({ response: "Missing fields" }),
       };
     }
 
     const model = role === "proctor" ? "gpt-3.5-turbo" : "gpt-4-turbo";
-    console.log(`🧠 Model selected: ${model}`);
 
     const completion = await openai.createChatCompletion({
       model,
       messages: [
         { role: "system", content: context },
-        { role: "user", content: message },
+        { role: "user", content: message }
       ],
       temperature: 0.7,
     });
 
+    console.log("✅ OpenAI Raw Response:", JSON.stringify(completion.data, null, 2));
+
     const reply = completion?.data?.choices?.[0]?.message?.content?.trim();
-    console.log("✅ GPT Reply:", reply);
 
     return {
       statusCode: 200,
       body: JSON.stringify({
-        response: reply || "I'm sorry, I didn’t understand that.",
+        response: reply || "⚠️ GPT did not return a message."
       }),
     };
-  } catch (error) {
-    console.error("🚨 OpenAI API Error:", error.message);
 
+  } catch (err) {
+    console.error("🚨 Error:", err.message);
     return {
       statusCode: 500,
       body: JSON.stringify({
-        response: "There was an error contacting ChatGPT.",
-        error: error.message,
+        response: "Error: " + err.message
       }),
     };
   }
