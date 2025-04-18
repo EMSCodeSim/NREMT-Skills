@@ -1,4 +1,10 @@
-exports.handler = async (event) => {
+import { OpenAI } from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+export default async (event) => {
   try {
     const { message, role, context } = JSON.parse(event.body);
     console.log("🔥 Incoming Request");
@@ -15,10 +21,6 @@ exports.handler = async (event) => {
       };
     }
 
-    // Dynamic import of openai
-    const { OpenAI } = await import("openai");
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
     const model = role === "proctor" ? "gpt-3.5-turbo" : "gpt-4-turbo";
 
     const chat = await openai.chat.completions.create({
@@ -31,7 +33,6 @@ exports.handler = async (event) => {
     });
 
     const reply = chat?.choices?.[0]?.message?.content?.trim();
-    console.log("✅ OpenAI Reply:", reply);
 
     return {
       statusCode: 200,
