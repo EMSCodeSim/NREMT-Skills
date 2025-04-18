@@ -85,15 +85,20 @@
         appendMessage(text, "user");
         inputBox.value = "";
 
+        const payload = {
+          message: text,
+          role: "patient",  // or "proctor" depending on scenario
+          context: "You are simulating a realistic EMS patient. Respond to EMT assessment questions like a real patient would."
+        };
+
         try {
+          console.log("Sending request:", payload);
           const res = await fetch("/.netlify/functions/openai", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              message: text,
-              role: "patient",  // Change to "proctor" if testing proctor responses
-              context: "You are simulating a realistic EMS patient. Respond appropriately to EMT assessment questions."
-            })
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
           });
 
           const data = await res.json();
