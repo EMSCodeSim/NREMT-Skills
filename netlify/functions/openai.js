@@ -6,19 +6,13 @@ const openai = new OpenAI({
 
 export default async (event) => {
   try {
-    const { message, role, context } = JSON.parse(event.body);
-    console.log("🔥 Incoming Request");
-    console.log("Message:", message);
-    console.log("Role:", role);
-    console.log("Context preview:", context?.substring(0, 100) + "...");
+    const { message, role, context } = event.body;
 
     if (!message || !role || !context) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({
-          response: "Missing message, role, or context.",
-        }),
-      };
+      return new Response(
+        JSON.stringify({ response: "Missing message, role, or context." }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
     }
 
     const model = role === "proctor" ? "gpt-3.5-turbo" : "gpt-4-turbo";
@@ -34,20 +28,18 @@ export default async (event) => {
 
     const reply = chat?.choices?.[0]?.message?.content?.trim();
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify({
-        response: reply || "⚠️ GPT returned no message.",
-      }),
-    };
+    return new Response(
+      JSON.stringify({ response: reply || "⚠️ GPT returned no message." }),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
   } catch (err) {
     console.error("❌ OpenAI Error:", err.message);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({
+    return new Response(
+      JSON.stringify({
         response: "There was an error contacting ChatGPT.",
         error: err.message,
       }),
-    };
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
   }
 };
