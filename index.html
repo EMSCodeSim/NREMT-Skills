@@ -7,32 +7,50 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f9f9f9;
+      background: #f4f4f4;
       margin: 0;
       padding: 0;
     }
 
     #chat-container {
-      max-width: 800px;
-      margin: 40px auto;
+      max-width: 900px;
+      margin: 30px auto;
       padding: 20px;
       background: white;
       border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
 
     h1 {
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
     }
+
+    #button-bar {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    button {
+      margin: 5px;
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #startBtn { background: #007bff; color: white; }
+    #micBtn { background: #28a745; color: white; }
+    #endBtn { background: #dc3545; color: white; }
 
     #messages {
       max-height: 500px;
       overflow-y: auto;
-      border: 1px solid #ddd;
+      border: 1px solid #ccc;
       padding: 10px;
-      margin-bottom: 10px;
       border-radius: 5px;
+      margin-bottom: 10px;
     }
 
     .bubble {
@@ -40,18 +58,17 @@
       margin: 5px 0;
       border-radius: 5px;
       max-width: 80%;
+      word-wrap: break-word;
     }
 
     .user {
       background-color: #cfe2ff;
-      align-self: flex-end;
       text-align: right;
       margin-left: auto;
     }
 
     .ai {
       background-color: #d1e7dd;
-      align-self: flex-start;
       text-align: left;
       margin-right: auto;
     }
@@ -61,49 +78,103 @@
       padding: 12px;
       border-radius: 5px;
       border: 1px solid #ccc;
-      box-sizing: border-box;
       font-size: 16px;
+      box-sizing: border-box;
     }
   </style>
 </head>
 <body>
   <div id="chat-container">
     <h1>🚑 EMS Code Sim</h1>
+
+    <div id="button-bar">
+      <button id="startBtn">▶️ Start Simulation</button>
+      <button id="micBtn">🎤 Mic</button>
+      <button id="endBtn">⛔ End Scenario</button>
+    </div>
+
     <div id="messages"></div>
-    <input type="text" id="inputBox" placeholder="Type your message and press Enter" />
+    <input type="text" id="inputBox" placeholder="Type or speak your response..." />
   </div>
 
   <script>
+    const startBtn = document.getElementById("startBtn");
+    const micBtn = document.getElementById("micBtn");
+    const endBtn = document.getElementById("endBtn");
     const inputBox = document.getElementById("inputBox");
     const messages = document.getElementById("messages");
+
+    let recognition;
+    let simulationStarted = false;
+
+    startBtn.addEventListener("click", () => {
+      simulationStarted = true;
+      appendMessage("You are responding to a 55-year-old male complaining of chest pain at a public park.", "ai");
+    });
+
+    endBtn.addEventListener("click", () => {
+      if (!simulationStarted) return;
+      simulationStarted = false;
+      appendMessage("✅ Scenario ended. Please complete your handoff report.", "ai");
+    });
+
+    micBtn.addEventListener("click", () => {
+      if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+        alert("Speech recognition not supported in this browser.");
+        return;
+      }
+
+      recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = "en-US";
+      recognition.start();
+
+      micBtn.textContent = "🎤 Listening...";
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        inputBox.value = transcript;
+        inputBox.focus();
+        micBtn.textContent = "🎤 Mic";
+      };
+
+      recognition.onerror = (event) => {
+        console.error("Speech error:", event.error);
+        micBtn.textContent = "🎤 Mic";
+      };
+
+      recognition.onend = () => {
+        micBtn.textContent = "🎤 Mic";
+      };
+    });
 
     inputBox.addEventListener("keypress", async function (e) {
       if (e.key === "Enter") {
         const text = inputBox.value.trim();
-        if (!text) return;
+        if (!text || !simulationStarted) {
+          appendMessage("⚠️ Start a simulation before sending messages.", "ai");
+          return;
+        }
 
         appendMessage(text, "user");
         inputBox.value = "";
 
         const payload = {
           message: text,
-          role: "patient",  // or "proctor" depending on scenario
+          role: "patient",
           context: "You are simulating a realistic EMS patient. Respond to EMT assessment questions like a real patient would."
         };
 
         try {
-          console.log("Sending request:", payload);
           const res = await fetch("/.netlify/functions/openai", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
           });
 
           const data = await res.json();
           appendMessage(data.response || "⚠️ No response received.", "ai");
         } catch (err) {
+          console.error("❌ Fetch error:", err);
           appendMessage("❌ Error: " + err.message, "ai");
         }
       }
