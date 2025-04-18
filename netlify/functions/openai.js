@@ -6,8 +6,14 @@ const openai = new OpenAI({
 
 export default async (event) => {
   try {
+    console.log("🔥 Incoming request:", event.body);
+
     const parsedBody = typeof event.body === "string" ? JSON.parse(event.body) : event.body;
     const { message, role, context } = parsedBody;
+
+    console.log("📦 Parsed message:", message);
+    console.log("📦 Parsed role:", role);
+    console.log("📦 Parsed context:", context);
 
     if (!message || !role || !context) {
       console.error("❌ Missing one of: message, role, or context");
