@@ -18,7 +18,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const response = await fetch("/.netlify/functions/openai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userInput: input }),
+        body: JSON.stringify({
+          message: input,
+          role: "user",
+          context: "You are an EMS patient simulator. Respond as a patient unless the user is requesting vitals, treatment effects, or external cues — then respond as a proctor."
+        }),
       });
 
       const data = await response.json();
