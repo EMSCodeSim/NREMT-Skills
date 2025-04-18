@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Test OpenAI API Function</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      background: #f8f9fa;
+    }
+    label, select, input, textarea, button {
+      font-size: 1rem;
+      display: block;
+      margin: 0.5rem 0;
+      width: 100%;
+      max-width: 600px;
+    }
+    textarea {
+      height: 120px;
+    }
+    #output {
+      margin-top: 2rem;
+      background: #ffffff;
+      border: 1px solid #ccc;
+      padding: 1rem;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧪 Test ChatGPT API via Netlify Function</h1>
+
+  <label for="role">Role:</label>
+  <select id="role">
+    <option value="patient">Patient (GPT-4)</option>
+    <option value="proctor">Proctor (GPT-3.5)</option>
+  </select>
+
+  <label for="message">Message to send:</label>
+  <input type="text" id="message" value="What is your name?" />
+
+  <label for="context">System prompt (context):</label>
+  <textarea id="context">
+You are a 58-year-old male patient experiencing chest pain. Respond like a real patient being interviewed by an EMT.
+  </textarea>
+
+  <button onclick="sendTest()">Send to API</button>
+
+  <div id="output"></div>
+
+  <script>
+    async function sendTest() {
+      const role = document.getElementById("role").value;
+      const message = document.getElementById("message").value;
+      const context = document.getElementById("context").value;
+      const output = document.getElementById("output");
+
+      output.textContent = "Sending...";
+
+      try {
+        const res = await fetch("/.netlify/functions/openai", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ role, message, context })
+        });
+
+        const data = await res.json();
+        output.textContent = `✅ Response:\n${data.response || "(no reply)"}`;
+      } catch (err) {
+        output.textContent = `❌ Error:\n${err.message}`;
+      }
+    }
+  </script>
+</body>
+</html>
