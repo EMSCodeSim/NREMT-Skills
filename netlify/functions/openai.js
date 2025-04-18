@@ -1,8 +1,8 @@
-// Use dynamic import for OpenAI v4+ inside Netlify's Node.js environment
+// netlify/functions/openai.js
 const OpenAI = require("openai");
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY, // Set this in your Netlify site environment variables
 });
 
 exports.handler = async (event) => {
@@ -14,6 +14,7 @@ exports.handler = async (event) => {
     console.log("Role:", role);
     console.log("Context preview:", context?.substring(0, 100) + "...");
 
+    // Validate input
     if (!message || !role || !context) {
       return {
         statusCode: 400,
@@ -21,20 +22,23 @@ exports.handler = async (event) => {
       };
     }
 
+    // Choose model
     const model = role === "proctor" ? "gpt-3.5-turbo" : "gpt-4-turbo";
 
+    // Send to OpenAI
     const chat = await openai.chat.completions.create({
       model,
       messages: [
         { role: "system", content: context },
-        { role: "user", content: message },
+        { role: "user", content: message }
       ],
       temperature: 0.7,
     });
 
+    // Extract reply
     const reply = chat?.choices?.[0]?.message?.content?.trim();
 
-    console.log("✅ OpenAI Reply:", reply);
+    console.log("✅ GPT Response:", reply);
 
     return {
       statusCode: 200,
