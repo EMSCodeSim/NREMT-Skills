@@ -5,6 +5,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const endButton = document.getElementById("end-button");
   const userInput = document.getElementById("user-input");
 
+  let currentScenarioContext = ""; // stores scenario data after loading
+
   sendButton.addEventListener("click", async () => {
     const input = userInput.value.trim();
     if (!input) return;
@@ -21,7 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify({
           message: input,
           role: "user",
-          context: "You are an EMS patient simulator. Respond as a patient unless the user is requesting vitals, treatment effects, or external cues — then respond as a proctor."
+          context: currentScenarioContext || "No scenario loaded"
         }),
       });
 
@@ -30,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const patientMessage = document.createElement("p");
       patientMessage.className = "ai-message";
-      patientMessage.textContent = reply;
+      patientMessage.textContent = `Patient: ${reply}`;
       chatDisplay.appendChild(patientMessage);
     } catch (error) {
       console.error("Fetch error:", error);
@@ -39,11 +41,31 @@ document.addEventListener("DOMContentLoaded", () => {
     userInput.value = "";
   });
 
-  startButton.addEventListener("click", () => {
+  startButton.addEventListener("click", async () => {
     const message = document.createElement("p");
     message.className = "system-message";
     message.textContent = "🚨 Scenario Started. Awaiting dispatch...";
     chatDisplay.appendChild(message);
+
+    // Load chest pain scenario context
+    try {
+      const response = await fetch("scenarios/chest_pain_001/scenario.json");
+      const scenario = await response.json();
+
+      currentScenarioContext = `
+        Scenario Title: ${scenario.title}
+        Patient: ${scenario.description}
+        Instructions: ${scenario.instructions || "Follow NREMT protocol for medical assessment."}
+      `;
+
+      const dispatchMessage = document.createElement("p");
+      dispatchMessage.className = "system-message";
+      dispatchMessage.textContent = `Dispatch: ${scenario.dispatch || "You are responding to a 55-year-old male with chest pain."}`;
+      chatDisplay.appendChild(dispatchMessage);
+    } catch (err) {
+      console.error("Failed to load scenario file", err);
+      chatDisplay.appendChild(createSystemMessage("Failed to load scenario file."));
+    }
   });
 
   endButton.addEventListener("click", () => {
@@ -52,4 +74,11 @@ document.addEventListener("DOMContentLoaded", () => {
     message.textContent = "✅ Scenario Ended.";
     chatDisplay.appendChild(message);
   });
+
+  function createSystemMessage(text) {
+    const message = document.createElement("p");
+    message.className = "system-message";
+    message.textContent = text;
+    return message;
+  }
 });
