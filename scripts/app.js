@@ -2,9 +2,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const chatDisplay = document.getElementById("chat-display");
   const sendButton = document.getElementById("send-button");
   const startButton = document.getElementById("start-button");
+  const endButton = document.getElementById("end-button");
   const userInput = document.getElementById("user-input");
 
-  // Handle send button click
   sendButton.addEventListener("click", async () => {
     const input = userInput.value.trim();
     if (!input) return;
@@ -25,38 +25,27 @@ document.addEventListener("DOMContentLoaded", () => {
       const reply = data.response || "I'm sorry, I can't respond right now.";
 
       const patientMessage = document.createElement("p");
-      patientMessage.className = "patient-message";
-      patientMessage.textContent = `Patient: ${reply}`;
+      patientMessage.className = "ai-message";
+      patientMessage.textContent = reply;
       chatDisplay.appendChild(patientMessage);
     } catch (error) {
-      const errorMessage = document.createElement("p");
-      errorMessage.className = "patient-message";
-      errorMessage.textContent = "Patient: I'm sorry, I can't respond right now.";
-      chatDisplay.appendChild(errorMessage);
+      console.error("Fetch error:", error);
     }
 
     userInput.value = "";
-    chatDisplay.scrollTop = chatDisplay.scrollHeight;
   });
 
-  // Load and display dispatch info
-  startButton.addEventListener("click", async () => {
-    try {
-      const res = await fetch("data/patients.json");
-      const data = await res.json();
-      const patient = data.patients[0];
-      const dispatchMessage = `📟 Dispatch: Respond to a 45-year-old male complaining of chest pain. Patient is alert and diaphoretic at home.`;
+  startButton.addEventListener("click", () => {
+    const message = document.createElement("p");
+    message.className = "system-message";
+    message.textContent = "🚨 Scenario Started. Awaiting dispatch...";
+    chatDisplay.appendChild(message);
+  });
 
-      const dispatchEl = document.createElement("p");
-      dispatchEl.className = "dispatch-message";
-      dispatchEl.textContent = dispatchMessage;
-      chatDisplay.appendChild(dispatchEl);
-      chatDisplay.scrollTop = chatDisplay.scrollHeight;
-    } catch (err) {
-      const errorEl = document.createElement("p");
-      errorEl.className = "patient-message";
-      errorEl.textContent = "Unable to load scenario.";
-      chatDisplay.appendChild(errorEl);
-    }
+  endButton.addEventListener("click", () => {
+    const message = document.createElement("p");
+    message.className = "system-message";
+    message.textContent = "✅ Scenario Ended.";
+    chatDisplay.appendChild(message);
   });
 });
