@@ -6,7 +6,8 @@ const openai = new OpenAI({
 
 export default async (event) => {
   try {
-    const { message, role, context } = JSON.parse(event.body);
+    const body = typeof event.body === "string" ? JSON.parse(event.body) : event.body;
+    const { message, role, context } = body;
 
     if (!message || !role || !context) {
       return new Response(
