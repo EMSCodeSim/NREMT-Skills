@@ -30,6 +30,8 @@ async function startScenario() {
       img.src = scenario.image;
       img.alt = "Scene";
       img.style.maxWidth = "100%";
+      img.style.maxHeight = "40vh";
+      img.style.objectFit = "contain";
       img.style.borderRadius = "8px";
       img.style.margin = "10px 0";
       chat.appendChild(img);
