@@ -10,6 +10,36 @@ document.addEventListener("DOMContentLoaded", () => {
   let recognition;
   let isListening = false;
 
+  let timerInterval;
+  let timeLeft = 15 * 60; // 15 minutes in seconds
+
+  function startCountdown() {
+    clearInterval(timerInterval);
+    timeLeft = 15 * 60;
+    updateTimerDisplay();
+
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      updateTimerDisplay();
+
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        chatDisplay.appendChild(createSystemMessage("⏱ Time is up! Scenario ended."));
+      }
+    }, 1000);
+  }
+
+  function stopCountdown() {
+    clearInterval(timerInterval);
+  }
+
+  function updateTimerDisplay() {
+    const timerElement = document.getElementById("timer");
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  }
+
   async function sendMessage(input) {
     const userMessage = document.createElement("p");
     userMessage.className = "user-message";
@@ -54,7 +84,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       scrollChatToBottom();
 
-      // Restart mic if not already listening
       if (!isListening) setTimeout(startMic, 300);
     } catch (error) {
       console.error("Fetch error:", error);
@@ -89,12 +118,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     recognition.onstart = () => {
       isListening = true;
-      micButton.style.backgroundColor = "#dc3545"; // Red while active
+      micButton.style.backgroundColor = "#dc3545";
     };
 
     recognition.onend = () => {
       isListening = false;
-      micButton.style.backgroundColor = "#6c757d"; // Reset color
+      micButton.style.backgroundColor = "#28a745";
     };
 
     recognition.onresult = (event) => {
@@ -105,7 +134,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     recognition.onerror = (event) => {
       console.error("Speech recognition error:", event.error);
-      micButton.style.backgroundColor = "#6c757d";
+      micButton.style.backgroundColor = "#28a745";
     };
 
     recognition.start();
@@ -116,6 +145,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   startButton.addEventListener("click", async () => {
+    startCountdown();
     chatDisplay.appendChild(createSystemMessage("🚨 Scenario Started. Awaiting dispatch..."));
     scrollChatToBottom();
 
@@ -131,7 +161,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       chatDisplay.appendChild(createSystemMessage(`Dispatch: ${scenario.dispatch || "You are responding to a 55-year-old male with chest pain."}`));
 
-      // Show scene photo and text
       if (scenario.response_1) {
         chatDisplay.appendChild(createSystemMessage(scenario.response_1));
       }
@@ -139,9 +168,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const img = document.createElement("img");
         img.src = `scenarios/chest_pain_001/${scenario.response_1_image}`;
         img.alt = "Scene view";
-        img.style.maxWidth = "100%";
-        img.style.borderRadius = "8px";
-        img.style.marginTop = "10px";
         chatDisplay.appendChild(img);
       }
 
@@ -153,6 +179,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   endButton.addEventListener("click", () => {
+    stopCountdown();
     chatDisplay.appendChild(createSystemMessage("✅ Scenario Ended."));
     scrollChatToBottom();
   });
