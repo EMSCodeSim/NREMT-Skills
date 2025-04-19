@@ -23,7 +23,6 @@ async function startScenario() {
 
     appendMessage("Dispatch", scenario.dispatch || "You are responding to an emergency call.");
 
-    // Show scene image if available
     if (scenario.image) {
       const chat = document.getElementById("chat-display");
       const img = document.createElement("img");
@@ -38,7 +37,6 @@ async function startScenario() {
       chat.scrollTop = chat.scrollHeight;
     }
 
-    // Load proctor and patient prompts into memory
     await Promise.all([
       sendToAI("proctor", scenario.proctorPrompt),
       sendToAI("patient", scenario.patientPrompt)
@@ -127,8 +125,14 @@ function startTimer(duration) {
   }, 1000);
 }
 
-// Handle user message input and route to AI
+// Enter key and send button both send message
 document.getElementById('send-button').addEventListener('click', handleUserMessage);
+document.getElementById('user-input').addEventListener('keydown', (event) => {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    handleUserMessage();
+  }
+});
 
 async function handleUserMessage() {
   const inputBox = document.getElementById("user-input");
