@@ -12,18 +12,31 @@ document.getElementById('scenario-button').addEventListener('click', () => {
   }
 });
 
-// Placeholder for actual scenario logic
-function startScenario() {
+async function startScenario() {
   appendMessage("System", "🟢 Scenario started. Awaiting dispatch...");
-  // Additional logic goes here
+
+  try {
+    const response = await fetch("scenarios/chest_pain_001/scenario.json");
+    const scenario = await response.json();
+
+    // Show dispatch message
+    appendMessage("Dispatch", scenario.dispatch || "You are responding to an emergency call.");
+
+    // Send proctor and patient context to OpenAI backend
+    await Promise.all([
+      sendToAI("proctor", scenario.proctorPrompt),
+      sendToAI("patient", scenario.patientPrompt)
+    ]);
+  } catch (err) {
+    appendMessage("System", "❌ Error loading scenario.");
+    console.error(err);
+  }
 }
 
 function endScenario() {
   appendMessage("System", "🔴 Scenario ended.");
-  // Additional cleanup logic goes here
 }
 
-// Placeholder chat handling logic
 function appendMessage(sender, text) {
   const chat = document.getElementById('chat-display');
   const msg = document.createElement('div');
@@ -31,4 +44,15 @@ function appendMessage(sender, text) {
   msg.style.margin = '10px 0';
   chat.appendChild(msg);
   chat.scrollTop = chat.scrollHeight;
+}
+
+async function sendToAI(role, prompt) {
+  await fetch("/.netlify/functions/openai", {
+    method: "POST",
+    body: JSON.stringify({
+      message: "Scenario started.",
+      role: role,
+      context: prompt
+    })
+  });
 }
