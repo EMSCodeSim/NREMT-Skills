@@ -1,4 +1,5 @@
 let scenarioRunning = false;
+let countdownInterval;
 
 document.getElementById('scenario-button').addEventListener('click', () => {
   if (!scenarioRunning) {
@@ -14,15 +15,29 @@ document.getElementById('scenario-button').addEventListener('click', () => {
 
 async function startScenario() {
   appendMessage("System", "🟢 Scenario started. Awaiting dispatch...");
+  startTimer(15 * 60); // 15 minutes in seconds
 
   try {
     const response = await fetch("scenarios/chest_pain_001/scenario.json");
     const scenario = await response.json();
 
-    // Show dispatch message
+    // Display dispatch info
     appendMessage("Dispatch", scenario.dispatch || "You are responding to an emergency call.");
 
-    // Send proctor and patient context to backend
+    // Display scene image if present
+    if (scenario.image) {
+      const chat = document.getElementById("chat-display");
+      const img = document.createElement("img");
+      img.src = scenario.image;
+      img.alt = "Scene";
+      img.style.maxWidth = "100%";
+      img.style.borderRadius = "8px";
+      img.style.margin = "10px 0";
+      chat.appendChild(img);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    // Send prompts to OpenAI for memory
     await Promise.all([
       sendToAI("proctor", scenario.proctorPrompt),
       sendToAI("patient", scenario.patientPrompt)
@@ -34,6 +49,7 @@ async function startScenario() {
 }
 
 function endScenario() {
+  clearInterval(countdownInterval);
   appendMessage("System", "🔴 Scenario ended. Generating test results...");
 
   fetch("/.netlify/functions/gradeScenario", {
@@ -75,4 +91,21 @@ async function sendToAI(role, prompt) {
 function getTranscriptLog() {
   const messages = document.querySelectorAll("#chat-display div");
   return Array.from(messages).map(msg => msg.textContent).join("\n");
+}
+
+function startTimer(duration) {
+  let timer = duration;
+  const display = document.getElementById("timer");
+
+  countdownInterval = setInterval(() => {
+    const minutes = Math.floor(timer / 60);
+    const seconds = timer % 60;
+    display.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    if (--timer < 0) {
+      clearInterval(countdownInterval);
+      appendMessage("System", "⏰ Time is up!");
+      document.getElementById('scenario-button').textContent = 'Start Scenario';
+      scenarioRunning = false;
+    }
+  }, 1000);
 }
