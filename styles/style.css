@@ -22,7 +22,8 @@ header {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  padding: 0 10px;
+  padding: 10px;
+  padding-bottom: 100px; /* Make room for fixed input bar */
 }
 
 #chat-display {
@@ -36,16 +37,130 @@ header {
 }
 
 #input-container {
-  position: sticky;
+  position: fixed;
   bottom: 0;
+  left: 0;
+  width: 100%;
   background-color: #e9ecef;
   padding: 10px;
   border-top: 1px solid #ccc;
   z-index: 999;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 }
 
 #user-input {
-  width: 100%;
+  flex: 1;
   padding: 12px;
   font-size: 16px;
-  border-radius: 8
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  resize: none;
+  min-height: 2.5em;
+  width: 100%;
+}
+
+#controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+#send-button,
+#mic-button,
+#scenario-button {
+  padding: 10px 18px;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+#send-button {
+  background-color: #007bff;
+  color: white;
+}
+
+#send-button:hover {
+  background-color: #0056b3;
+}
+
+#mic-button {
+  background-color: #28a745;
+  color: white;
+}
+
+#mic-button:hover {
+  background-color: #1e7e34;
+}
+
+#scenario-button {
+  background-color: #ffc107;
+  color: black;
+}
+
+#scenario-button:hover {
+  background-color: #e0a800;
+}
+
+#timer {
+  font-size: 18px;
+  font-weight: bold;
+  padding: 10px;
+  color: #333;
+  text-align: center;
+}
+
+/* Chat bubbles */
+.chat-left, .chat-right, .chat-center {
+  display: flex;
+  margin: 8px;
+}
+
+.chat-left {
+  justify-content: flex-start;
+}
+
+.chat-right {
+  justify-content: flex-end;
+}
+
+.chat-center {
+  justify-content: center;
+}
+
+.chat-bubble {
+  padding: 10px 15px;
+  border-radius: 20px;
+  max-width: 75%;
+  font-size: 16px;
+  line-height: 1.4;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.patient-bubble {
+  background-color: #d0ebff;
+  color: #00395d;
+}
+
+.proctor-bubble {
+  background-color: #d4f8d4;
+  color: #003d00;
+}
+
+.user-bubble {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.system-bubble {
+  background-color: #f5f5f5;
+  color: #888;
+  font-style: italic;
+}
