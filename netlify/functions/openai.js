@@ -14,14 +14,28 @@ const sessionMemory = {
   askedLungSounds: false
 };
 
-function detectRole(message) {
+function getRoleConfidence(message) {
   const lower = message.toLowerCase();
-  const proctorTriggers = [
-    "vitals", "blood pressure", "pulse", "respirations", "spo2", "pupils",
-    "bgl", "skin", "transport", "asa", "nitro", "oxygen", "scene safe",
-    "what are the", "what is the", "administer", "give", "aed"
+
+  const highConfidence = [
+    /\bblood pressure\b/, /\bpulse\b/, /\brespirations?\b/, /\bo2\b/, /\bbgl\b/,
+    /\bo2 sat(uration)?\b/, /\bapply (aed|oxygen)\b/, /\bgive\b/, /\badminister\b/,
+    /\bpupils\b/, /\bscene safe\b/, /\basa\b/, /\bnitro\b/
   ];
-  return proctorTriggers.some(kw => lower.includes(kw)) ? "proctor" : "patient";
+
+  const mediumConfidence = [
+    /\bcheck\b/, /\bvitals\b/, /\bwhat is\b/, /\bwhat are\b/
+  ];
+
+  for (const pattern of highConfidence) {
+    if (pattern.test(lower)) return { role: "proctor", confidence: "High" };
+  }
+
+  for (const pattern of mediumConfidence) {
+    if (pattern.test(lower)) return { role: "proctor", confidence: "Medium" };
+  }
+
+  return { role: "patient", confidence: "Low" };
 }
 
 function updateMemory(message) {
@@ -49,7 +63,10 @@ exports.handler = async (event) => {
     const body = JSON.parse(event.body);
     const { message } = body;
 
-    const role = detectRole(message);
+    const routing = getRoleConfidence(message); // returns { role, confidence }
+    const role = routing.role;
+    const confidence = routing.confidence;
+
     updateMemory(message);
 
     let context = "";
@@ -77,7 +94,10 @@ exports.handler = async (event) => {
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ response: reply })
+      body: JSON.stringify({
+        response: reply,
+        routing: `🧭 Routed to: ${role.charAt(0).toUpperCase() + role.slice(1)} (Confidence: ${confidence})`
+      })
     };
   } catch (err) {
     console.error("❌ Server Error:", err);
