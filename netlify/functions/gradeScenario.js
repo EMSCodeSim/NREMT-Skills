@@ -8,28 +8,28 @@ exports.handler = async function(event) {
     const gradingPrompt = `
 You are a certified NREMT test proctor grading a student EMT-B on the medical assessment skill station.
 
-Score the student's performance using the NREMT-B checklist based on the following transcript of their actions and dialogue:
+Review the scenario transcript:
 -------------
 ${transcript}
 -------------
 
-Your output should follow this format:
+Provide an easy-to-read final report with these exact headings:
 
 Score: __ / 48
 
 ✅ Done Correctly:
-- List of all correct actions
+(List what the user completed correctly)
 
 ❌ Missed Items:
-- List of what was skipped or done incorrectly
+(List what was skipped or incorrectly performed)
 
 📌 Tips for Improvement:
-- 2 to 3 personalized suggestions to improve next time
+(2–3 personalized improvement suggestions)
 
 ❗ Critical Failures:
-- Only if applicable, list any NREMT-critical fail reasons (e.g., failure to give oxygen, skipped scene safety, delayed transport, etc.)
+(If any critical NREMT fails occurred, explain them. Otherwise say 'None')
 
-Be strict but constructive and accurate.
+Be clear, structured, and objective.
 `;
 
     const completion = await openai.chat.completions.create({
