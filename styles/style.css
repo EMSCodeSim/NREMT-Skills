@@ -1,114 +1,81 @@
-html, body {
+body {
   margin: 0;
-  padding: 0;
-  height: 100%;
-  font-family: 'Segoe UI', sans-serif;
-  background-color: #f0f2f5;
-  overflow: hidden;
-}
-
-#container {
+  font-family: Arial, sans-serif;
+  background-color: #f2f4f8;
   display: flex;
   flex-direction: column;
   height: 100vh;
-  width: 100vw;
+  overflow: hidden;
 }
 
-#header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+header {
   background-color: #003366;
   color: white;
-  padding: 12px 24px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-}
-
-#header h1 {
-  margin: 0;
-  font-size: 1.5rem;
-}
-
-#header .controls {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-#header .controls button {
-  padding: 8px 12px;
-  font-size: 1rem;
-  background-color: #ffc107;
-  color: #000;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-#header .controls button:hover {
-  background-color: #e0a800;
-}
-
-#timer {
-  font-size: 1.2rem;
+  padding: 15px;
+  text-align: center;
+  font-size: 24px;
   font-weight: bold;
-  color: #fff;
-  background-color: #dc3545;
-  padding: 6px 12px;
-  border-radius: 8px;
 }
 
-#chat-wrapper {
-  flex-grow: 1;
+#chat-container {
+  flex: 1;
   display: flex;
-  justify-content: center;
-  overflow: hidden;
-  padding: 16px;
-  background-color: #eef1f4;
+  flex-direction: column;
+  padding: 10px;
+  overflow-y: auto;
+  scroll-behavior: smooth;
 }
 
 #chat-display {
-  width: 100%;
-  max-width: 800px;
-  height: 100%;
+  flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  padding: 10px;
   background-color: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  box-sizing: border-box;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-#input-group {
+#input-container {
   display: flex;
   flex-direction: column;
-  padding: 16px;
+  padding: 10px;
   background-color: #e9ecef;
-}
-
-#input-row {
-  display: flex;
-  gap: 10px;
+  border-top: 1px solid #ccc;
 }
 
 #user-input {
-  flex-grow: 1;
+  flex: 1;
   padding: 12px;
-  font-size: 1rem;
+  font-size: 16px;
+  margin-bottom: 5px;
+  border-radius: 8px;
   border: 1px solid #ccc;
-  border-radius: 6px;
   resize: none;
-  height: 3.5em;
+  min-height: 2.5em;
+}
+
+#controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+#send-button,
+#mic-button,
+#scenario-button {
+  padding: 10px 18px;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
 #send-button {
-  padding: 12px 18px;
-  font-size: 1rem;
   background-color: #007bff;
-  border: none;
   color: white;
-  border-radius: 6px;
-  cursor: pointer;
 }
 
 #send-button:hover {
@@ -116,22 +83,79 @@ html, body {
 }
 
 #mic-button {
-  margin-top: 12px;
-  font-size: 1.2rem;
-  padding: 14px;
   background-color: #28a745;
   color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
 }
 
-@media screen and (max-width: 768px) {
-  #mic-button {
-    font-size: 1.5rem;
-    width: 100%;
-    padding: 16px;
-    margin-top: 12px;
-    display: block;
-  }
+#mic-button:hover {
+  background-color: #1e7e34;
+}
+
+#scenario-button {
+  background-color: #ffc107;
+  color: black;
+}
+
+#scenario-button:hover {
+  background-color: #e0a800;
+}
+
+#timer {
+  font-size: 18px;
+  font-weight: bold;
+  padding: 10px;
+  color: #333;
+  text-align: center;
+}
+
+/* Chat bubbles */
+.chat-left,
+.chat-right,
+.chat-center {
+  display: flex;
+  margin: 8px;
+}
+
+.chat-left {
+  justify-content: flex-start;
+}
+
+.chat-right {
+  justify-content: flex-end;
+}
+
+.chat-center {
+  justify-content: center;
+}
+
+.chat-bubble {
+  padding: 10px 15px;
+  border-radius: 20px;
+  max-width: 75%;
+  font-size: 16px;
+  line-height: 1.4;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.patient-bubble {
+  background-color: #d0ebff;
+  color: #00395d;
+}
+
+.proctor-bubble {
+  background-color: #d4f8d4;
+  color: #003d00;
+}
+
+.user-bubble {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.system-bubble {
+  background-color: #f5f5f5;
+  color: #888;
+  font-style: italic;
 }
