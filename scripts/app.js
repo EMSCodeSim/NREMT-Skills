@@ -15,20 +15,17 @@ document.addEventListener("DOMContentLoaded", () => {
     chatDisplay.appendChild(userMessage);
     scrollChatToBottom();
 
-    // Detect if message is for proctor
-    const proctorTriggers = [
-      "blood pressure", "pulse", "breath sounds", "respirations",
-      "o2 sat", "oxygen saturation", "blood sugar", "bgl",
-      "bsi", "scene safe", "give", "administer",
-      "oxygen", "aed", "nitro", "aspirin"
+    // Use keyword-based detection for frontend speaker labeling
+    const proctorKeywords = [
+      "blood pressure", "pulse", "respirations", "oxygen", "bgl",
+      "o2 sat", "asa", "nitro", "aed", "scene safe", "give", "administer",
+      "pupils", "what is", "what are", "check", "apply"
     ];
 
-    const isProctorMessage = proctorTriggers.some(trigger =>
+    const isProctorMessage = proctorKeywords.some(trigger =>
       input.toLowerCase().includes(trigger)
     );
 
-    const role = isProctorMessage ? "proctor" : "user";
-    const model = isProctorMessage ? "gpt-3.5-turbo" : "gpt-4-turbo";
     const speaker = isProctorMessage ? "Proctor" : "Patient";
 
     try {
@@ -37,7 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: input,
-          role: role,
+          role: isProctorMessage ? "proctor" : "user", // used only for display, server decides final
           context: currentScenarioContext || "No scenario loaded"
         }),
       });
@@ -49,8 +46,15 @@ document.addEventListener("DOMContentLoaded", () => {
       replyMessage.className = "ai-message";
       replyMessage.textContent = `${speaker}: ${reply}`;
       chatDisplay.appendChild(replyMessage);
+
+      // Show AI routing if returned
+      if (data.routing) {
+        chatDisplay.appendChild(createSystemMessage(data.routing));
+      }
+
     } catch (error) {
       console.error("Fetch error:", error);
+      chatDisplay.appendChild(createSystemMessage("❌ Error contacting AI server."));
     }
 
     userInput.value = "";
@@ -106,7 +110,7 @@ document.addEventListener("DOMContentLoaded", () => {
       scrollChatToBottom();
     } catch (err) {
       console.error("Failed to load scenario file", err);
-      chatDisplay.appendChild(createSystemMessage("Failed to load scenario file."));
+      chatDisplay.appendChild(createSystemMessage("❌ Failed to load scenario file."));
     }
   });
 
