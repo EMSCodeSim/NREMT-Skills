@@ -17,7 +17,6 @@ document.addEventListener("DOMContentLoaded", () => {
     chatDisplay.appendChild(userMessage);
     scrollChatToBottom();
 
-    // Use keyword-based detection for frontend speaker labeling
     const proctorKeywords = [
       "blood pressure", "pulse", "respirations", "oxygen", "bgl",
       "o2 sat", "asa", "nitro", "aed", "scene safe", "give", "administer",
@@ -55,9 +54,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       scrollChatToBottom();
 
-      // Reactivate mic after AI responds
+      // Restart mic if not already listening
       if (!isListening) setTimeout(startMic, 300);
-
     } catch (error) {
       console.error("Fetch error:", error);
       chatDisplay.appendChild(createSystemMessage("❌ Error contacting AI server."));
@@ -91,18 +89,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     recognition.onstart = () => {
       isListening = true;
-      micButton.style.backgroundColor = "#dc3545"; // Red when listening
+      micButton.style.backgroundColor = "#dc3545"; // Red while active
     };
 
     recognition.onend = () => {
       isListening = false;
-      micButton.style.backgroundColor = "#6c757d"; // Reset to default
+      micButton.style.backgroundColor = "#6c757d"; // Reset color
     };
 
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript;
       userInput.value = transcript;
-      sendMessage(transcript); // Auto-send
+      sendMessage(transcript);
     };
 
     recognition.onerror = (event) => {
@@ -132,6 +130,21 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
 
       chatDisplay.appendChild(createSystemMessage(`Dispatch: ${scenario.dispatch || "You are responding to a 55-year-old male with chest pain."}`));
+
+      // Show scene photo and text
+      if (scenario.response_1) {
+        chatDisplay.appendChild(createSystemMessage(scenario.response_1));
+      }
+      if (scenario.response_1_image) {
+        const img = document.createElement("img");
+        img.src = `scenarios/chest_pain_001/${scenario.response_1_image}`;
+        img.alt = "Scene view";
+        img.style.maxWidth = "100%";
+        img.style.borderRadius = "8px";
+        img.style.marginTop = "10px";
+        chatDisplay.appendChild(img);
+      }
+
       scrollChatToBottom();
     } catch (err) {
       console.error("Failed to load scenario file", err);
