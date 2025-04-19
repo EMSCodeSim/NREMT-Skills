@@ -1,55 +1,82 @@
-body {
-  font-family: Arial, sans-serif;
+html, body {
   margin: 0;
-  padding: 20px;
-  background-color: #f4f4f9;
+  padding: 0;
+  height: 100%;
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+  background-color: #f8f9fa;
 }
 
-h1 {
-  text-align: center;
-  color: #333;
-}
-
-#chat-interface {
-  width: 100%;
-  max-width: 600px;
-  margin: 20px auto;
-  padding: 20px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  background-color: #fff;
+#container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
 }
 
 #chat-display {
-  height: 300px;
-  overflow-y: scroll;
-  border: 1px solid #ccc;
+  flex-grow: 1;
+  overflow-y: auto;
   padding: 10px;
-  background-color: #f9f9f9;
-  margin-bottom: 10px;
+  background-color: #ffffff;
+  box-sizing: border-box;
 }
 
-#chat-display p {
-  margin: 5px 0;
-}
-
-.user-message {
-  text-align: right;
-  color: blue;
-}
-
-.patient-message {
-  text-align: left;
-  color: green;
+#input-area {
+  display: flex;
+  padding: 10px;
+  background-color: #e9ecef;
+  box-sizing: border-box;
 }
 
 #user-input {
-  width: calc(100% - 80px);
+  flex: 1;
   padding: 10px;
-  margin-right: 10px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  min-width: 0;
 }
 
-#send-button {
-  padding: 10px;
+#send-button, #mic-button {
+  margin-left: 8px;
+  padding: 10px 14px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 4px;
+  background-color: #007bff;
+  color: white;
   cursor: pointer;
+}
+
+#send-button:hover, #mic-button:hover {
+  background-color: #0056b3;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  margin-top: 10px;
+}
+
+.user-message, .ai-message, .system-message {
+  margin: 6px 0;
+  padding: 8px 12px;
+  border-radius: 6px;
+  line-height: 1.4;
+}
+
+.user-message {
+  background-color: #d1ecf1;
+  align-self: flex-end;
+}
+
+.ai-message {
+  background-color: #fff3cd;
+}
+
+.system-message {
+  background-color: #f0f0f0;
+  font-style: italic;
 }
