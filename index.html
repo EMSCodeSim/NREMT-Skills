@@ -2,109 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>EMS Code Sim</title>
-  <link rel="stylesheet" href="styles/style.css" />
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      margin: 0;
-      padding: 0;
-    }
-    #chat-container {
-      max-width: 900px;
-      margin: 30px auto;
-      padding: 20px;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-    h1 {
-      text-align: center;
-      margin-bottom: 15px;
-    }
-    #button-bar {
-      text-align: center;
-      margin-bottom: 15px;
-    }
-    button {
-      margin: 5px;
-      padding: 10px 20px;
-      font-size: 16px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    #start-button {
-      background: #007bff;
-      color: white;
-    }
-    #end-button {
-      background: #dc3545;
-      color: white;
-    }
-    .chat-box {
-      min-height: 300px;
-      max-height: 400px;
-      border: 1px solid #ccc;
-      padding: 10px;
-      border-radius: 5px;
-      overflow-y: auto;
-      background: #f9f9f9;
-    }
-    .user-message {
-      text-align: right;
-      color: blue;
-      margin: 5px 0;
-    }
-    .ai-message {
-      text-align: left;
-      color: green;
-      margin: 5px 0;
-    }
-    .system-message {
-      text-align: center;
-      font-style: italic;
-      color: #555;
-      margin: 10px 0;
-    }
-    #input-area {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      margin-top: 10px;
-    }
-    #user-input {
-      flex-grow: 1;
-      padding: 10px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    #send-button {
-      background-color: #28a745;
-      color: white;
-    }
-    #mic-button {
-      background-color: #6c757d;
-      color: white;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="chat-container">
-    <h1>EMS Code Sim</h1>
-
-    <div id="button-bar">
-      <button id="start-button">Start Scenario</button>
-      <button id="end-button">End Scenario</button>
-    </div>
-
-    <div id="chat-display" class="chat-box"></div>
-
+  <div id="container">
+    <div id="chat-display"></div>
     <div id="input-area">
-      <input type="text" id="user-input" placeholder="Type your message..." />
+      <input id="user-input" type="text" placeholder="Type your response..." />
       <button id="send-button">Send</button>
       <button id="mic-button">🎤</button>
     </div>
