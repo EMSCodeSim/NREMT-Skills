@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let isListening = false;
 
   let timerInterval;
-  let timeLeft = 15 * 60; // 15 minutes in seconds
+  let timeLeft = 15 * 60;
 
   function startCountdown() {
     clearInterval(timerInterval);
@@ -57,7 +57,8 @@ document.addEventListener("DOMContentLoaded", () => {
       input.toLowerCase().includes(trigger)
     );
 
-    const speaker = isProctorMessage ? "Proctor" : "Patient";
+    const role = isProctorMessage ? "proctor" : "patient";
+    const speaker = role.charAt(0).toUpperCase() + role.slice(1);
 
     try {
       const response = await fetch("/.netlify/functions/openai", {
@@ -65,7 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: input,
-          role: isProctorMessage ? "proctor" : "user",
+          role: role,
           context: currentScenarioContext || "No scenario loaded"
         }),
       });
@@ -74,7 +75,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const reply = data.response || "I'm sorry, I can't respond right now.";
 
       const replyMessage = document.createElement("p");
-      replyMessage.className = "ai-message";
+      replyMessage.className = role === "proctor"
+        ? "proctor-message"
+        : role === "patient"
+          ? "patient-message"
+          : "ai-message";
+
       replyMessage.textContent = `${speaker}: ${reply}`;
       chatDisplay.appendChild(replyMessage);
 
@@ -118,12 +124,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     recognition.onstart = () => {
       isListening = true;
-      micButton.style.backgroundColor = "#dc3545";
+      micButton.style.backgroundColor = "#dc3545"; // red when active
     };
 
     recognition.onend = () => {
       isListening = false;
-      micButton.style.backgroundColor = "#28a745";
+      micButton.style.backgroundColor = "#28a745"; // default green
     };
 
     recognition.onresult = (event) => {
@@ -164,6 +170,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (scenario.response_1) {
         chatDisplay.appendChild(createSystemMessage(scenario.response_1));
       }
+
       if (scenario.response_1_image) {
         const img = document.createElement("img");
         img.src = `scenarios/chest_pain_001/${scenario.response_1_image}`;
