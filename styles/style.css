@@ -2,9 +2,9 @@ body {
   margin: 0;
   font-family: Arial, sans-serif;
   background-color: #f2f4f8;
+  height: 100vh;
   display: flex;
   flex-direction: column;
-  height: 100vh;
   overflow: hidden;
 }
 
@@ -15,17 +15,21 @@ header {
   text-align: center;
   font-size: 24px;
   font-weight: bold;
+  flex-shrink: 0;
 }
 
+/* Main chat container fills all available height */
 #chat-container {
   flex: 1;
   display: flex;
   flex-direction: column;
+  position: relative;
   overflow: hidden;
   padding: 10px;
-  padding-bottom: 120px; /* Reserve space for fixed input */
+  padding-bottom: 120px; /* Makes room for the fixed input */
 }
 
+/* AI response area: fills full space and scrolls */
 #chat-display {
   flex: 1;
   overflow-y: auto;
@@ -34,8 +38,11 @@ header {
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   scroll-behavior: smooth;
+  height: 100%;
+  max-height: 100%;
 }
 
+/* Fixed footer input stays locked at bottom of screen */
 #input-container {
   position: fixed;
   bottom: 0;
