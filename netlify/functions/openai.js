@@ -21,11 +21,12 @@ function getRoleConfidence(message) {
     /\bblood pressure\b/, /\bpulse\b/, /\brespirations?\b/, /\bo2\b/, /\bbgl\b/,
     /\bo2 sat(uration)?\b/, /\bapply (aed|oxygen)\b/, /\bgive\b/, /\badminister\b/,
     /\bpupils\b/, /\bscene safe\b/, /\basa\b/, /\bnitro\b/,
-    /\bhow many patients\b/, /\bstart an iv\b/
+    /\bhow many patients\b/, /\bstart an iv\b/, /\btransport\b/, /\bcollar\b/
   ];
 
   const patientOnly = [
-    /\bmedical history\b/, /\bpast medical history\b/, /\bhistory of\b/
+    /\bmedical history\b/, /\bpast medical history\b/, /\bhistory of\b/,
+    /\bpain\b/, /\bsymptom\b/, /\bfeel\b/, /\bwhere does it hurt\b/
   ];
 
   for (const pattern of patientOnly) {
@@ -36,7 +37,7 @@ function getRoleConfidence(message) {
     if (pattern.test(lower)) return { role: "proctor", confidence: "High" };
   }
 
-  return { role: "patient", confidence: "Low" };
+  return { role: "patient", confidence: "Low" }; // Default to patient
 }
 
 function updateMemory(message) {
@@ -62,49 +63,51 @@ function injectVitals(template) {
 exports.handler = async (event) => {
   try {
     const body = JSON.parse(event.body);
-    const { message } = body;
+    const { message, role: manualRole, context } = body;
 
-    const routing = getRoleConfidence(message);
+    if (!message) {
+      return { statusCode: 400, body: JSON.stringify({ response: "Missing message." }) };
+    }
+
+    // Determine role automatically unless specified
+    const routing = manualRole ? { role: manualRole, confidence: "Manual" } : getRoleConfidence(message);
     const role = routing.role;
-    const confidence = routing.confidence;
 
     updateMemory(message);
 
-    let context = "";
-
+    let systemPrompt = "";
     if (role === "proctor") {
-      context = proctorPrompt.content
+      systemPrompt = proctorPrompt.content
         ? injectVitals(proctorPrompt.content)
         : "You are a NREMT test proctor. Respond with vitals, unseen cues, and treatment confirmations.";
     } else {
-      context = patientPrompt.content
+      systemPrompt = patientPrompt.content
         ? patientPrompt.content
-        : "You are a patient experiencing a medical emergency. Respond only to appropriate questions like a real patient.";
+        : "You are a patient experiencing a medical emergency. Respond as realistically and emotionally as possible.";
     }
 
+    const model = role === "patient" ? "gpt-4-turbo" : "gpt-3.5-turbo";
+
     const chat = await openai.chat.completions.create({
-      model: role === "proctor" ? "gpt-3.5-turbo" : "gpt-4-turbo",
+      model,
       messages: [
-        { role: "system", content: context },
+        { role: "system", content: systemPrompt },
         { role: "user", content: message }
       ],
-      temperature: 0.7
+      temperature: 0.7,
+      max_tokens: 300
     });
 
-    const reply = chat?.choices?.[0]?.message?.content;
-
+    const reply = chat.choices[0]?.message?.content || "No response generated.";
     return {
       statusCode: 200,
-      body: JSON.stringify({
-        response: reply,
-        routing: `🧭 Routed to: ${role.charAt(0).toUpperCase() + role.slice(1)} (Confidence: ${confidence})`
-      })
+      body: JSON.stringify({ response: reply, role })
     };
   } catch (err) {
-    console.error("❌ Server Error:", err);
+    console.error("❌ openai.js error:", err);
     return {
       statusCode: 500,
-      body: JSON.stringify({ response: "I'm sorry, something went wrong on the server." })
+      body: JSON.stringify({ response: "Internal server error." })
     };
   }
 };
