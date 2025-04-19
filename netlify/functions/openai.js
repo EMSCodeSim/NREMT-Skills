@@ -55,9 +55,13 @@ exports.handler = async (event) => {
     let context = "";
 
     if (role === "proctor") {
-      context = injectVitals(proctorPrompt.content);
+      context = proctorPrompt.content
+        ? injectVitals(proctorPrompt.content)
+        : "You are a NREMT test proctor. Respond with vitals, unseen cues, and treatment confirmations.";
     } else {
-      context = patientPrompt.content;
+      context = patientPrompt.content
+        ? patientPrompt.content
+        : "You are a patient experiencing a medical emergency. Respond only to appropriate questions like a real patient.";
     }
 
     const chat = await openai.chat.completions.create({
@@ -83,4 +87,3 @@ exports.handler = async (event) => {
     };
   }
 };
-
