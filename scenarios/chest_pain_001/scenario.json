@@ -1,7 +1,7 @@
 {
-  "id": "chest_pain_001",
-  "title": "Chest Pain – 58-Year-Old Male",
-  "difficulty": "medium",
-  "type": "medical",
-  "tags": ["chest pain", "cardiac", "adult"]
+  "title": "Chest Pain - 55-Year-Old Male",
+  "dispatch": "You are responding to a 55-year-old male with chest pain.",
+  "description": "Patient is conscious and alert, complaining of chest pressure for the last 20 minutes.",
+  "response_1": "You arrive on scene and park in front of a quiet residential home...",
+  "response_1_image": "scene_view_from_side_window.jpg"
 }
