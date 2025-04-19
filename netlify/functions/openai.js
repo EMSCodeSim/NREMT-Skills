@@ -20,19 +20,20 @@ function getRoleConfidence(message) {
   const highConfidence = [
     /\bblood pressure\b/, /\bpulse\b/, /\brespirations?\b/, /\bo2\b/, /\bbgl\b/,
     /\bo2 sat(uration)?\b/, /\bapply (aed|oxygen)\b/, /\bgive\b/, /\badminister\b/,
-    /\bpupils\b/, /\bscene safe\b/, /\basa\b/, /\bnitro\b/
+    /\bpupils\b/, /\bscene safe\b/, /\basa\b/, /\bnitro\b/,
+    /\bhow many patients\b/, /\bstart an iv\b/
   ];
 
-  const mediumConfidence = [
-    /\bcheck\b/, /\bvitals\b/, /\bwhat is\b/, /\bwhat are\b/
+  const patientOnly = [
+    /\bmedical history\b/, /\bpast medical history\b/, /\bhistory of\b/
   ];
+
+  for (const pattern of patientOnly) {
+    if (pattern.test(lower)) return { role: "patient", confidence: "High" };
+  }
 
   for (const pattern of highConfidence) {
     if (pattern.test(lower)) return { role: "proctor", confidence: "High" };
-  }
-
-  for (const pattern of mediumConfidence) {
-    if (pattern.test(lower)) return { role: "proctor", confidence: "Medium" };
   }
 
   return { role: "patient", confidence: "Low" };
@@ -63,7 +64,7 @@ exports.handler = async (event) => {
     const body = JSON.parse(event.body);
     const { message } = body;
 
-    const routing = getRoleConfidence(message); // returns { role, confidence }
+    const routing = getRoleConfidence(message);
     const role = routing.role;
     const confidence = routing.confidence;
 
