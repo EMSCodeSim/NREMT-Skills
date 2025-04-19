@@ -102,63 +102,30 @@ function startTimer(duration) {
     display.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
     if (--timer < 0) {
       clearInterval(countdownInterval);
-      appendMessage("System", "⏰ Time is up!");
-      document.getElementById('scenario-button').textContent = 'Start Scenario';
-      scenarioRunning = false;
+      appendMessage("System", "⏰ Time's up!");
     }
   }, 1000);
 }
 
-// ⌨️ Send on Enter key or button click
-document.getElementById("send-button").addEventListener("click", sendUserInput);
-document.getElementById("user-input").addEventListener("keydown", function (e) {
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    sendUserInput();
-  }
-});
+// Handle user message input and route to AI
+document.getElementById('send-button').addEventListener('click', handleUserMessage);
 
-function sendUserInput() {
-  const input = document.getElementById("user-input");
-  const message = input.value.trim();
-  if (message) {
-    appendMessage("You", message);
-    input.value = "";
+async function handleUserMessage() {
+  const inputBox = document.getElementById("user-input");
+  const message = inputBox.value.trim();
+  if (!message) return;
 
-    fetch("/.netlify/functions/openai", {
-      method: "POST",
-      body: JSON.stringify({
-        message: message,
-        role: "user"
-      })
-    })
-      .then(res => res.json())
-      .then(data => {
-        appendMessage("Patient", data.response);
-      })
-      .catch(err => {
-        appendMessage("System", "❌ Error getting response.");
-        console.error(err);
-      });
-  }
+  appendMessage("You", message);
+  inputBox.value = "";
+
+  const res = await fetch("/.netlify/functions/openai", {
+    method: "POST",
+    body: JSON.stringify({ message })
+  });
+
+  const data = await res.json();
+  const aiResponse = data.response || "No response received.";
+  const sender = data.role === "proctor" ? "Proctor" : "Patient";
+
+  appendMessage(sender, aiResponse);
 }
-
-// 🎤 Mic input
-document.getElementById("mic-button").addEventListener("click", () => {
-  const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-  recognition.lang = "en-US";
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
-
-  recognition.onresult = function (event) {
-    const spokenText = event.results[0][0].transcript;
-    document.getElementById("user-input").value = spokenText;
-    sendUserInput();
-  };
-
-  recognition.onerror = function (event) {
-    appendMessage("System", "🎤 Mic error: " + event.error);
-  };
-
-  recognition.start();
-});
