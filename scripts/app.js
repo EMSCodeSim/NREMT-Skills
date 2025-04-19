@@ -69,10 +69,28 @@ function endScenario() {
 
 function appendMessage(sender, text) {
   const chat = document.getElementById('chat-display');
-  const msg = document.createElement('div');
-  msg.textContent = `${sender}: ${text}`;
-  msg.style.margin = '10px 0';
-  chat.appendChild(msg);
+  const msgWrapper = document.createElement('div');
+  const msgBubble = document.createElement('div');
+
+  msgBubble.textContent = text;
+  msgBubble.classList.add('chat-bubble');
+
+  if (sender === "Patient") {
+    msgWrapper.classList.add('chat-left');
+    msgBubble.classList.add('patient-bubble');
+  } else if (sender === "Proctor") {
+    msgWrapper.classList.add('chat-left');
+    msgBubble.classList.add('proctor-bubble');
+  } else if (sender === "You") {
+    msgWrapper.classList.add('chat-right');
+    msgBubble.classList.add('user-bubble');
+  } else {
+    msgWrapper.classList.add('chat-center');
+    msgBubble.classList.add('system-bubble');
+  }
+
+  msgWrapper.appendChild(msgBubble);
+  chat.appendChild(msgWrapper);
   chat.scrollTop = chat.scrollHeight;
 }
 
