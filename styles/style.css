@@ -126,47 +126,12 @@ html, body {
   cursor: pointer;
 }
 
-#mic-button:hover {
-  background-color: #218838;
-}
-
-/* Message styles */
-.user-message, .ai-message, .system-message {
-  margin: 8px 0;
-  padding: 10px 14px;
-  border-radius: 10px;
-  line-height: 1.5;
-  max-width: 90%;
-  word-wrap: break-word;
-}
-
-/* Color-coding by role */
-.user-message {
-  background-color: #cce5ff;
-  text-align: right;
-  align-self: flex-end;
-}
-
-.ai-message {
-  background-color: #fff3cd;
-}
-
-.system-message {
-  background-color: #dee2e6;
-  font-style: italic;
-}
-
-.proctor-message {
-  background-color: #d1ecf1;
-}
-
-.patient-message {
-  background-color: #fff3cd;
-}
-
-img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 10px;
-  margin-top: 10px;
+@media screen and (max-width: 768px) {
+  #mic-button {
+    font-size: 1.5rem;
+    width: 100%;
+    padding: 16px;
+    margin-top: 12px;
+    display: block;
+  }
 }
