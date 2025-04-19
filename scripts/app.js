@@ -22,7 +22,7 @@ async function startScenario() {
     // Show dispatch message
     appendMessage("Dispatch", scenario.dispatch || "You are responding to an emergency call.");
 
-    // Send proctor and patient context to OpenAI backend
+    // Send proctor and patient context to backend
     await Promise.all([
       sendToAI("proctor", scenario.proctorPrompt),
       sendToAI("patient", scenario.patientPrompt)
@@ -34,7 +34,22 @@ async function startScenario() {
 }
 
 function endScenario() {
-  appendMessage("System", "🔴 Scenario ended.");
+  appendMessage("System", "🔴 Scenario ended. Generating test results...");
+
+  fetch("/.netlify/functions/gradeScenario", {
+    method: "POST",
+    body: JSON.stringify({
+      transcript: getTranscriptLog()
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    appendMessage("Proctor", data.feedback || "No feedback received.");
+  })
+  .catch(err => {
+    appendMessage("System", "❌ Grading failed.");
+    console.error(err);
+  });
 }
 
 function appendMessage(sender, text) {
@@ -55,4 +70,9 @@ async function sendToAI(role, prompt) {
       context: prompt
     })
   });
+}
+
+function getTranscriptLog() {
+  const messages = document.querySelectorAll("#chat-display div");
+  return Array.from(messages).map(msg => msg.textContent).join("\n");
 }
