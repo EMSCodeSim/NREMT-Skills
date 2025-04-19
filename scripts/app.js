@@ -7,6 +7,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const userInput = document.getElementById("user-input");
 
   let currentScenarioContext = "";
+  let recognition;
+  let isListening = false;
 
   async function sendMessage(input) {
     const userMessage = document.createElement("p");
@@ -19,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const proctorKeywords = [
       "blood pressure", "pulse", "respirations", "oxygen", "bgl",
       "o2 sat", "asa", "nitro", "aed", "scene safe", "give", "administer",
-      "pupils", "what is", "what are", "check", "apply"
+      "pupils", "what is", "what are", "check", "apply", "how many patients", "start an iv"
     ];
 
     const isProctorMessage = proctorKeywords.some(trigger =>
@@ -34,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: input,
-          role: isProctorMessage ? "proctor" : "user", // used only for display, server decides final
+          role: isProctorMessage ? "proctor" : "user",
           context: currentScenarioContext || "No scenario loaded"
         }),
       });
@@ -47,10 +49,14 @@ document.addEventListener("DOMContentLoaded", () => {
       replyMessage.textContent = `${speaker}: ${reply}`;
       chatDisplay.appendChild(replyMessage);
 
-      // Show AI routing if returned
       if (data.routing) {
         chatDisplay.appendChild(createSystemMessage(data.routing));
       }
+
+      scrollChatToBottom();
+
+      // Reactivate mic after AI responds
+      if (!isListening) setTimeout(startMic, 300);
 
     } catch (error) {
       console.error("Fetch error:", error);
@@ -58,7 +64,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     userInput.value = "";
-    scrollChatToBottom();
   }
 
   sendButton.addEventListener("click", () => {
@@ -73,23 +78,43 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  micButton.addEventListener("click", () => {
-    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  function startMic() {
+    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      alert("Your browser doesn't support speech recognition.");
+      return;
+    }
+
+    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.lang = "en-US";
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
 
-    recognition.start();
+    recognition.onstart = () => {
+      isListening = true;
+      micButton.style.backgroundColor = "#dc3545"; // Red when listening
+    };
+
+    recognition.onend = () => {
+      isListening = false;
+      micButton.style.backgroundColor = "#6c757d"; // Reset to default
+    };
 
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript;
       userInput.value = transcript;
-      sendMessage(transcript);
+      sendMessage(transcript); // Auto-send
     };
 
     recognition.onerror = (event) => {
       console.error("Speech recognition error:", event.error);
+      micButton.style.backgroundColor = "#6c757d";
     };
+
+    recognition.start();
+  }
+
+  micButton.addEventListener("click", () => {
+    if (!isListening) startMic();
   });
 
   startButton.addEventListener("click", async () => {
