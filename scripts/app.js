@@ -1,13 +1,17 @@
+// ✅ Declare global patientGender so it's available everywhere
+let patientGender = "male";
+
 document.addEventListener('DOMContentLoaded', () => {
   let scenarioRunning = false;
   let micActive = false;
-  let patientGender = "male";
   const micButton = document.getElementById('mic-button');
   window.hasSpoken = false;
 
+  // Preload voices for fallback TTS
   window.speechSynthesis.onvoiceschanged = () => {
     window.speechSynthesis.getVoices();
   };
+
   document.body.addEventListener('click', () => {
     window.hasSpoken = true;
   }, { once: true });
@@ -36,11 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
   micButton.addEventListener('click', () => {
     micActive = !micActive;
     micButton.classList.toggle("active", micActive);
-    if (micActive) {
-      appendMessage("System", "🎤 Listening...");
-    } else {
-      appendMessage("System", "🛑 Mic off.");
-    }
+    appendMessage("System", micActive ? "🎤 Listening..." : "🛑 Mic off.");
   });
 });
 
@@ -50,6 +50,7 @@ async function startScenario() {
     const response = await fetch("/scenarios/chest_pain_001/scenario.json");
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const scenario = await response.json();
+
     patientGender = (scenario.gender || "male").toLowerCase();
     appendMessage("Dispatch", `🚑 Dispatch: ${scenario.dispatch}`, "Dispatch");
     appendMessage("Scene", `📍 Scene: ${scenario.scene_description}`);
@@ -63,9 +64,9 @@ async function startScenario() {
     chatBox.appendChild(img);
     chatBox.scrollTop = chatBox.scrollHeight;
 
-    const line = "Do you have chest pain?";
-    appendMessage("Patient", line, "Patient");
-    speakWithOpenAI(line);
+    const introLine = "Do you have chest pain?";
+    appendMessage("Patient", introLine, "Patient");
+    speakWithOpenAI(introLine);
   } catch (err) {
     appendMessage("System", `⚠️ Scenario load error: ${err.message}`);
   }
@@ -74,7 +75,7 @@ async function startScenario() {
 function endScenario() {
   appendMessage("System", "🔴 Scenario ended.");
   const chatBox = document.getElementById('chat-box');
-  chatBox.innerHTML = '';
+  chatBox.innerHTML = ''; // Clear conversation
 }
 
 function appendMessage(sender, message, role = "System") {
