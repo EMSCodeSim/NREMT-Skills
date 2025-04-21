@@ -6,16 +6,13 @@ publish = "public"
 directory = "netlify/functions"
 node_bundler = "esbuild"
 
-# ✅ EDGE FUNCTION DIRECTORY
 [edge_functions]
 directory = "netlify/edge-functions"
 
-# ✅ EDGE FUNCTION ROUTE MAPPING
 [[edge_functions]]
 function = "openai-stream"
 path = "/.netlify/edge-functions/openai-stream"
 
-# ✅ REDIRECT FOR STANDARD FUNCTIONS
 [[redirects]]
 from = "/.netlify/functions/*"
 to = "/.netlify/functions/:splat"
