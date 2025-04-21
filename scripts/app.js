@@ -2,16 +2,13 @@ document.addEventListener('DOMContentLoaded', () => {
   let scenarioRunning = false;
   let micActive = false;
   let patientGender = "male";
-
   const micButton = document.getElementById('mic-button');
   window.hasSpoken = false;
 
-  // Ensure voices are preloaded (especially for Safari)
+  // Preload voices for TTS
   window.speechSynthesis.onvoiceschanged = () => {
     window.speechSynthesis.getVoices();
   };
-
-  // Mark first user interaction (needed for iPhone Safari TTS)
   document.body.addEventListener('click', () => {
     window.hasSpoken = true;
   }, { once: true });
@@ -38,14 +35,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const role = getRoleConfidence(input).role;
       micButton.disabled = true;
-      const aiReply = await getAIResponse(input, role);
-      const speaker = role === "proctor" ? "Dispatch" : (patientGender === "female" ? "Patient-Female" : "Patient-Male");
-      appendMessage(role === "proctor" ? "Proctor" : "Patient", aiReply, speaker);
+      await getAIResponseStream(input, role);
       micButton.disabled = false;
     }
   });
 
-  // ✅ Smart Mic
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (SpeechRecognition) {
     const recognition = new SpeechRecognition();
@@ -69,47 +63,35 @@ document.addEventListener('DOMContentLoaded', () => {
       const transcript = event.results[0][0].transcript.trim();
       if (transcript) {
         appendMessage("User", transcript);
-
         micButton.disabled = true;
-
         const role = getRoleConfidence(transcript).role;
-        const aiReply = await getAIResponse(transcript, role);
-        const speaker = role === "proctor" ? "Dispatch" : (patientGender === "female" ? "Patient-Female" : "Patient-Male");
-        appendMessage(role === "proctor" ? "Proctor" : "Patient", aiReply, speaker);
-
+        await getAIResponseStream(transcript, role);
         micButton.disabled = false;
       }
     };
 
     micButton.addEventListener('click', () => {
-      if (!micActive) {
-        recognition.start();
-      } else {
-        recognition.stop();
-      }
+      if (!micActive) recognition.start();
+      else recognition.stop();
     });
   } else {
     micButton.disabled = true;
     micButton.textContent = "🎤 Not supported";
   }
 
-  function appendMessage(sender, message, voiceTag = null) {
+  function appendMessage(sender, message, voiceTag = null, skipVoice = false) {
     const chatBox = document.getElementById('chat-box');
     const messageEl = document.createElement('div');
     messageEl.classList.add('chat-message');
     messageEl.innerHTML = `<strong>${sender}:</strong> ${message}`;
     chatBox.appendChild(messageEl);
     chatBox.scrollTop = chatBox.scrollHeight;
-
-    if (voiceTag) {
-      speakMessage(message, voiceTag);
-    }
+    if (voiceTag && !skipVoice) speakMessage(message, voiceTag);
   }
 
   function speakMessage(text, speaker) {
     const synth = window.speechSynthesis;
-    synth.cancel(); // Prevent overlap on iOS
-
+    synth.cancel(); // iOS fix
     const utter = new SpeechSynthesisUtterance(text);
     const voices = synth.getVoices();
 
@@ -156,36 +138,71 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  async function getAIResponseStream(userMessage, role = "patient") {
+    const speaker = role === "proctor" ? "Dispatch" : (patientGender === "female" ? "Patient-Female" : "Patient-Male");
+    const sender = role === "proctor" ? "Proctor" : "Patient";
+    let messageEl = document.createElement('div');
+    messageEl.classList.add('chat-message');
+    messageEl.innerHTML = `<strong>${sender}:</strong> <span id="streaming-text"></span>`;
+    document.getElementById('chat-box').appendChild(messageEl);
+    document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
+
+    try {
+      const response = await fetch("/.netlify/functions/openai-stream", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userMessage, role: role })
+      });
+
+      if (!response.body) throw new Error("Streaming not supported");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let fullText = "";
+      let speaking = false;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        fullText += chunk;
+        document.getElementById("streaming-text").innerText = fullText;
+        document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
+
+        // Start speaking after first few words
+        if (!speaking && fullText.length > 15) {
+          speakMessage(fullText, speaker);
+          speaking = true;
+        }
+      }
+    } catch (err) {
+      console.error("Streaming failed:", err);
+      appendMessage("System", "⚠️ Error retrieving streaming response.");
+    }
+  }
+
   async function startScenario() {
     appendMessage("System", "🟢 Scenario started.");
     try {
       const response = await fetch("/scenarios/chest_pain_001/scenario.json");
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status} - ${response.statusText}`);
-      }
-
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const scenario = await response.json();
       patientGender = (scenario.gender || "male").toLowerCase();
-
       appendMessage("Dispatch", `🚑 Dispatch: ${scenario.dispatch}`, "Dispatch");
       appendMessage("Scene", `📍 Scene: ${scenario.scene_description}`);
 
-      const chatBox = document.getElementById('chat-box');
       const img = document.createElement('img');
       img.src = "/scenarios/chest_pain_001/patient_1.jpg";
       img.alt = "Patient";
       img.style.maxWidth = "100%";
       img.style.marginTop = "10px";
+      const chatBox = document.getElementById('chat-box');
       chatBox.appendChild(img);
       chatBox.scrollTop = chatBox.scrollHeight;
 
-      const aiReply = await getAIResponse("Do you have chest pain?", "patient");
-      const speaker = patientGender === "female" ? "Patient-Female" : "Patient-Male";
-      appendMessage("Patient", aiReply, speaker);
+      await getAIResponseStream("Do you have chest pain?", "patient");
     } catch (err) {
-      console.error("Scenario load error:", err);
-      appendMessage("System", `⚠️ Failed to load scenario: ${err.message}`);
+      appendMessage("System", `⚠️ Scenario load error: ${err.message}`);
     }
   }
 
@@ -197,29 +214,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const lower = message.toLowerCase();
     const proctorKeywords = ["blood pressure", "pulse", "respirations", "bgl", "oxygen"];
     const patientKeywords = ["pain", "symptom", "feel", "describe", "history", "allergies"];
-
     if (patientKeywords.some(word => lower.includes(word))) return { role: "patient" };
     if (proctorKeywords.some(word => lower.includes(word))) return { role: "proctor" };
     return { role: "patient" };
-  }
-
-  async function getAIResponse(message, role = "patient") {
-    try {
-      const response = await fetch("/.netlify/functions/openai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: message,
-          role: role,
-          context: "You are a simulated EMS patient. Respond appropriately."
-        })
-      });
-
-      const data = await response.json();
-      return data.response || "No response from AI.";
-    } catch (error) {
-      console.error("AI request error:", error);
-      return "⚠️ Error getting AI response.";
-    }
   }
 });
