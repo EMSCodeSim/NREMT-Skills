@@ -2,6 +2,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let scenarioRunning = false;
   let micActive = false;
 
+  const micButton = document.getElementById('mic-button');
+
   document.getElementById('scenario-button').addEventListener('click', () => {
     scenarioRunning = !scenarioRunning;
     document.getElementById('scenario-button').textContent = scenarioRunning ? 'End Scenario' : 'Start Scenario';
@@ -23,17 +25,60 @@ document.addEventListener('DOMContentLoaded', () => {
       inputBox.value = '';
 
       const role = getRoleConfidence(input).role;
+      micButton.disabled = true;
       const aiReply = await getAIResponse(input, role);
       appendMessage(role === "patient" ? "Patient" : "Proctor", aiReply);
+      micButton.disabled = false;
     }
   });
 
-  document.getElementById('mic-button').addEventListener('click', () => {
-    micActive = !micActive;
-    const micButton = document.getElementById('mic-button');
-    micButton.classList.toggle('active', micActive);
-    micButton.textContent = micActive ? '🎤 Listening...' : '🎤 Hold to Speak';
-  });
+  // ✅ Smart Mic: Auto-send voice, disable during AI response
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SpeechRecognition) {
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.continuous = false;
+
+    recognition.onstart = () => {
+      micActive = true;
+      micButton.classList.add('active');
+      micButton.textContent = "🎤 Listening...";
+    };
+
+    recognition.onend = () => {
+      micActive = false;
+      micButton.classList.remove('active');
+      micButton.textContent = "🎤 Hold to Speak";
+    };
+
+    recognition.onresult = async (event) => {
+      const transcript = event.results[0][0].transcript.trim();
+      if (transcript) {
+        appendMessage("User", transcript);
+
+        micButton.disabled = true;
+
+        const role = getRoleConfidence(transcript).role;
+        const aiReply = await getAIResponse(transcript, role);
+        appendMessage(role === "patient" ? "Patient" : "Proctor", aiReply);
+
+        micButton.disabled = false;
+      }
+    };
+
+    micButton.addEventListener('click', () => {
+      if (!micActive) {
+        recognition.start();
+      } else {
+        recognition.stop();
+      }
+    });
+  } else {
+    micButton.disabled = true;
+    micButton.textContent = "🎤 Not supported";
+    console.warn("SpeechRecognition not supported in this browser.");
+  }
 
   function appendMessage(sender, message) {
     const chatBox = document.getElementById('chat-box');
