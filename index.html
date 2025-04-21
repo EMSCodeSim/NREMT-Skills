@@ -4,31 +4,27 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>EMS Code Sim</title>
-  <link rel="stylesheet" href="styles/style.css" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="container">
-    <header id="header">
-      <h1>🚑 EMS Code Sim</h1>
-      <div class="controls">
-        <span id="timer">15:00</span>
-        <button id="scenario-button">Start Scenario</button>
-      </div>
-    </header>
+  <header>EMS CODE SIM</header>
 
-    <main id="chat-wrapper">
-      <div id="chat-display"></div>
-    </main>
-
-    <div id="input-group">
-      <div id="input-row">
-        <textarea id="user-input" placeholder="Type your response..."></textarea>
-        <button id="send-button">Send</button>
-      </div>
-      <button id="mic-button">🎤 Speak</button>
+  <!-- Container holds chat and input -->
+  <div id="chat-container">
+    <div id="chat-display">
+      <!-- AI and User messages go here -->
     </div>
-
-    <script src="scripts/app.js"></script>
   </div>
+
+  <!-- Fixed input area -->
+  <div id="input-container">
+    <textarea id="user-input" placeholder="Type your response..."></textarea>
+    <div id="controls">
+      <button id="send-button">Send</button>
+      <button id="mic-button">🎤</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
 </body>
 </html>
