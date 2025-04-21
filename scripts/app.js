@@ -4,6 +4,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const micButton = document.getElementById('mic-button');
 
+  // Preload voices for TTS
+  window.speechSynthesis.onvoiceschanged = () => {
+    window.speechSynthesis.getVoices();
+  };
+
   document.getElementById('scenario-button').addEventListener('click', () => {
     scenarioRunning = !scenarioRunning;
     document.getElementById('scenario-button').textContent = scenarioRunning ? 'End Scenario' : 'Start Scenario';
@@ -32,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // ✅ Smart Mic: Auto-send voice, disable during AI response
+  // ✅ Smart Mic with auto-send and TTS coordination
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (SpeechRecognition) {
     const recognition = new SpeechRecognition();
@@ -80,6 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.warn("SpeechRecognition not supported in this browser.");
   }
 
+  // ✅ Append message + TTS
   function appendMessage(sender, message) {
     const chatBox = document.getElementById('chat-box');
     const messageEl = document.createElement('div');
@@ -87,6 +93,26 @@ document.addEventListener('DOMContentLoaded', () => {
     messageEl.innerHTML = `<strong>${sender}:</strong> ${message}`;
     chatBox.appendChild(messageEl);
     chatBox.scrollTop = chatBox.scrollHeight;
+
+    if (sender === "Patient" || sender === "Proctor") {
+      speakMessage(message, sender);
+    }
+  }
+
+  // ✅ TTS with different voices
+  function speakMessage(text, speaker) {
+    const synth = window.speechSynthesis;
+    const utter = new SpeechSynthesisUtterance(text);
+
+    const voices = synth.getVoices();
+    const patientVoice = voices.find(v => v.name.includes("Google") && v.name.includes("Female")) || voices[0];
+    const proctorVoice = voices.find(v => v.name.includes("Google") && v.name.includes("Male")) || voices[1];
+
+    utter.voice = speaker === "Proctor" ? proctorVoice : patientVoice;
+    utter.rate = speaker === "Proctor" ? 1.0 : 1.1;
+    utter.pitch = speaker === "Proctor" ? 0.9 : 1.2;
+
+    synth.speak(utter);
   }
 
   async function startScenario() {
