@@ -1,14 +1,20 @@
 document.addEventListener('DOMContentLoaded', () => {
   let scenarioRunning = false;
   let micActive = false;
-  let patientGender = "male"; // default
+  let patientGender = "male";
 
   const micButton = document.getElementById('mic-button');
+  window.hasSpoken = false;
 
-  // Preload voices on load
+  // Ensure voices are preloaded (especially for Safari)
   window.speechSynthesis.onvoiceschanged = () => {
     window.speechSynthesis.getVoices();
   };
+
+  // Mark first user interaction (needed for iPhone Safari TTS)
+  document.body.addEventListener('click', () => {
+    window.hasSpoken = true;
+  }, { once: true });
 
   document.getElementById('scenario-button').addEventListener('click', () => {
     scenarioRunning = !scenarioRunning;
@@ -39,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // ✅ Smart Mic
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (SpeechRecognition) {
     const recognition = new SpeechRecognition();
@@ -84,10 +91,8 @@ document.addEventListener('DOMContentLoaded', () => {
   } else {
     micButton.disabled = true;
     micButton.textContent = "🎤 Not supported";
-    console.warn("SpeechRecognition not supported in this browser.");
   }
 
-  // Append message + voice tag
   function appendMessage(sender, message, voiceTag = null) {
     const chatBox = document.getElementById('chat-box');
     const messageEl = document.createElement('div');
@@ -101,30 +106,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Speak using voice selection
   function speakMessage(text, speaker) {
     const synth = window.speechSynthesis;
+    synth.cancel(); // Prevent overlap on iOS
+
     const utter = new SpeechSynthesisUtterance(text);
     const voices = synth.getVoices();
 
-    let patientMaleVoice =
+    if (!voices.length) {
+      setTimeout(() => speakMessage(text, speaker), 200);
+      return;
+    }
+
+    const patientMaleVoice =
       voices.find(v => v.name === "Alex") ||
       voices.find(v => v.name === "Microsoft David Desktop") ||
       voices.find(v => v.name.includes("Google UK") && v.name.includes("Male")) ||
       voices.find(v => v.name.toLowerCase().includes("male")) || voices[0];
 
-    let patientFemaleVoice =
+    const patientFemaleVoice =
       voices.find(v => v.name === "Samantha") ||
       voices.find(v => v.name === "Microsoft Zira Desktop") ||
       voices.find(v => v.name.includes("Google US") && v.name.includes("English")) ||
       voices.find(v => v.name.toLowerCase().includes("female")) || voices[1] || voices[0];
 
-    let dispatchVoice =
+    const dispatchVoice =
       voices.find(v => v.name === "Victoria") ||
       voices.find(v => v.name.includes("Google UK English Female")) ||
       voices.find(v => v.name.toLowerCase().includes("female")) || voices[2] || voices[0];
 
-    // Voice + rate + pitch configs
     if (speaker === "Patient-Male") {
       utter.voice = patientMaleVoice;
       utter.rate = 1.05;
@@ -141,7 +151,9 @@ document.addEventListener('DOMContentLoaded', () => {
       utter.voice = voices[0];
     }
 
-    synth.speak(utter);
+    if (window.hasSpoken || !/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+      synth.speak(utter);
+    }
   }
 
   async function startScenario() {
