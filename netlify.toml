@@ -12,3 +12,7 @@ directory = "netlify/edge-functions"
 [[edge_functions]]
 function = "openai-stream"
 path = "/openai-stream"
+
+[[edge_functions]]
+function = "openai-stream"
+path = "/.netlify/edge-functions/openai-stream"
