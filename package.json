@@ -11,6 +11,6 @@
     "openai": "^4.0.0"
   },
   "devDependencies": {
-    "netlify-cli": "^15.0.0"
+    "netlify-cli": "^15.11.0"
   }
 }
