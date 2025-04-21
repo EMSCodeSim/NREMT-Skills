@@ -1,4 +1,4 @@
-// ✅ Declare global patientGender so it's available everywhere
+// ✅ Global variable to track patient voice preference
 let patientGender = "male";
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -29,11 +29,27 @@ document.addEventListener('DOMContentLoaded', () => {
     endScenario();
   });
 
-  document.getElementById('send-button').addEventListener('click', () => {
+  document.getElementById('send-button').addEventListener('click', async () => {
     const input = document.getElementById('user-input');
-    if (input.value.trim() !== '') {
-      appendMessage("You", input.value, "User");
+    const message = input.value.trim();
+    if (message !== '') {
+      appendMessage("You", message, "User");
       input.value = '';
+
+      // 🔄 Trigger simple keyword-based replies
+      if (message.toLowerCase().includes("chest pain")) {
+        const reply = "Yes, it's a sharp, crushing pain that started about 10 minutes ago.";
+        appendMessage("Patient", reply, "Patient");
+        speakWithOpenAI(reply);
+      } else if (message.toLowerCase().includes("bp") || message.toLowerCase().includes("blood pressure")) {
+        const reply = "The proctor says his blood pressure is 92 over 58.";
+        appendMessage("Proctor", reply, "Proctor");
+        speakWithOpenAI(reply);
+      } else {
+        const reply = "I'm not sure what you mean. Can you clarify?";
+        appendMessage("Patient", reply, "Patient");
+        speakWithOpenAI(reply);
+      }
     }
   });
 
@@ -64,9 +80,10 @@ async function startScenario() {
     chatBox.appendChild(img);
     chatBox.scrollTop = chatBox.scrollHeight;
 
-    const introLine = "Do you have chest pain?";
-    appendMessage("Patient", introLine, "Patient");
-    speakWithOpenAI(introLine);
+    // ✅ First patient response instead of prompt
+    const reply = "Yes, I'm having chest pain. It started suddenly, and it's getting worse.";
+    appendMessage("Patient", reply, "Patient");
+    speakWithOpenAI(reply);
   } catch (err) {
     appendMessage("System", `⚠️ Scenario load error: ${err.message}`);
   }
@@ -75,7 +92,7 @@ async function startScenario() {
 function endScenario() {
   appendMessage("System", "🔴 Scenario ended.");
   const chatBox = document.getElementById('chat-box');
-  chatBox.innerHTML = ''; // Clear conversation
+  chatBox.innerHTML = '';
 }
 
 function appendMessage(sender, message, role = "System") {
