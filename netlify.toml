@@ -9,11 +9,6 @@ node_bundler = "esbuild"
 [edge_functions]
 directory = "netlify/edge-functions"
 
-[[redirects]]
-from = "/.netlify/functions/*"
-to = "/.netlify/functions/:splat"
-status = 200
-
 [[edge_functions]]
 function = "openai-stream"
-path = "/.netlify/edge-functions/openai-stream"
+path = "/openai-stream"
