@@ -2,21 +2,5 @@
   "id": "chest_pain_001",
   "title": "Chest Pain - 55-Year-Old Male",
   "dispatch": "You are responding to a 55-year-old male with chest pain. The scene is a quiet residential home. The patient is sitting upright on a couch, appears pale and diaphoretic.",
-  "scene_description": "The patient is alert and oriented but appears pale and sweaty. He is clutching his chest and breathing rapidly. The living room is clean, there are no signs of trauma or hazards.",
-  "chief_complaint": "Chest pain",
-  "general_impression": "55-year-old male in mild distress, pale and diaphoretic",
-  "onset": "About an hour ago",
-  "provocation": "Worse with movement and deep breaths",
-  "quality": "Sharp, stabbing pain",
-  "radiation": "Pain radiates to the left arm",
-  "severity": "8 out of 10",
-  "time": "Started around 1 hour ago",
-  "sample": {
-    "signs_symptoms": "Chest pain, sweating, shortness of breath",
-    "allergies": "None",
-    "medications": "Lisinopril",
-    "past_medical_history": "Hypertension",
-    "last_oral_intake": "A sandwich and water about 2 hours ago",
-    "events": "Was mowing the lawn when chest pain began"
-  }
+  "scene_description": "The patient is alert, oriented, but visibly diaphoretic. He is clutching his chest and breathing rapidly in a modest living room. There are no hazards present."
 }
