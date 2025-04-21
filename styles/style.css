@@ -1,11 +1,12 @@
+/* Reset + base */
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background-color: #f2f4f8;
   height: 100vh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  background-color: #f2f4f8;
 }
 
 header {
@@ -18,29 +19,15 @@ header {
   flex-shrink: 0;
 }
 
-/* Chat container fills entire screen height minus input footer */
+/* Wrapper holds chat + input */
 #chat-container {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 120px); /* leave space for header + input */
-  overflow: hidden;
-  padding: 10px;
-}
-
-/* Chat area grows but never pushes input off screen */
-#chat-display {
-  flex-grow: 1;
-  overflow-y: auto;
-  padding: 10px;
-  background-color: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  scroll-behavior: smooth;
   height: 100%;
+  overflow: hidden;
 }
 
-/* Fixed input stays locked at bottom of screen */
+/* FIXED input area at bottom of screen */
 #input-container {
   position: fixed;
   bottom: 0;
@@ -50,20 +37,7 @@ header {
   padding: 10px;
   border-top: 1px solid #ccc;
   z-index: 999;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
   box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.1);
-}
-
-#user-input {
-  width: 100%;
-  padding: 12px;
-  font-size: 16px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  resize: none;
-  min-height: 2.5em;
 }
 
 #controls {
@@ -74,16 +48,26 @@ header {
   flex-wrap: wrap;
 }
 
+#user-input {
+  flex: 1;
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  resize: none;
+  min-height: 2.5em;
+  width: 100%;
+  margin-bottom: 5px;
+}
+
 #send-button,
-#mic-button,
-#scenario-button {
+#mic-button {
   padding: 10px 18px;
   font-size: 16px;
   font-weight: bold;
   border: none;
   border-radius: 10px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
 }
 
 #send-button {
@@ -91,37 +75,25 @@ header {
   color: white;
 }
 
-#send-button:hover {
-  background-color: #0056b3;
-}
-
 #mic-button {
   background-color: #28a745;
   color: white;
 }
 
-#mic-button:hover {
-  background-color: #1e7e34;
-}
-
-#scenario-button {
-  background-color: #ffc107;
-  color: black;
-}
-
-#scenario-button:hover {
-  background-color: #e0a800;
-}
-
-#timer {
-  font-size: 18px;
-  font-weight: bold;
+/* Main chat area: scrollable, tall */
+#chat-display {
+  flex-grow: 1;
   padding: 10px;
-  color: #333;
-  text-align: center;
+  overflow-y: auto;
+  background-color: #ffffff;
+  margin-bottom: 130px; /* Reserve space for fixed input */
+  height: calc(100vh - 200px); /* Adjust to fit screen minus header + input */
+  scroll-behavior: smooth;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Chat bubbles */
+/* Bubbles */
 .chat-left, .chat-right, .chat-center {
   display: flex;
   margin: 8px;
