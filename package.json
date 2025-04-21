@@ -6,6 +6,7 @@
   "main": "index.js",
   "scripts": {
     "start": "netlify dev"
+      "build": "vite build"  // or replace with "react-scripts build" or your actual build command
   },
   "dependencies": {
     "openai": "^4.0.0"
