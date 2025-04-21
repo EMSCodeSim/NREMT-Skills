@@ -4,27 +4,168 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>EMS Code Sim</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-color: #f2f4f8;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      background-color: #003366;
+      color: white;
+    }
+
+    #logo {
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    #header-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #start-button, #end-button, #timer {
+      background-color: #ffc107;
+      border: none;
+      padding: 8px 16px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #chat-container {
+      flex: 1;
+      background-color: #ffffff;
+      padding: 10px;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-message {
+      max-width: 75%;
+      margin: 8px;
+      padding: 10px 15px;
+      border-radius: 20px;
+      font-size: 16px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .patient {
+      background-color: #d0ebff;
+      color: #00395d;
+      align-self: flex-start;
+    }
+
+    .proctor {
+      background-color: #d4f8d4;
+      color: #003d00;
+      align-self: flex-start;
+    }
+
+    .user {
+      background-color: #e0e0e0;
+      color: #333;
+      align-self: flex-end;
+    }
+
+    .system {
+      background-color: #f5f5f5;
+      color: #888;
+      font-style: italic;
+      align-self: center;
+    }
+
+    #input-area {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background-color: #e9ecef;
+      padding: 10px;
+      border-top: 1px solid #ccc;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 10;
+    }
+
+    #text-row {
+      display: flex;
+      width: 100%;
+      gap: 10px;
+    }
+
+    #user-input {
+      flex: 1;
+      font-size: 16px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      resize: none;
+      height: 3.5em;
+    }
+
+    #send-button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    #mic-button {
+      margin-top: 5px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-  <header>EMS CODE SIM</header>
+  <header>
+    <div id="logo">🚑 EMS Code Sim</div>
+    <div id="header-controls">
+      <button id="start-button">Start Scenario</button>
+      <button id="end-button">End Scenario</button>
+      <div id="timer" style="display:none;">15:00</div>
+    </div>
+  </header>
 
-  <!-- Container holds chat and input -->
   <div id="chat-container">
-    <div id="chat-display">
-      <!-- AI and User messages go here -->
-    </div>
+    <!-- Example Messages -->
+    <div class="chat-message patient">My chest hurts really bad...</div>
+    <div class="chat-message proctor">BP is 134/88, pulse 98.</div>
+    <div class="chat-message user">I'm going to give 324mg ASA.</div>
+    <div class="chat-message system">🟢 Scenario started</div>
   </div>
 
-  <!-- Fixed input area -->
-  <div id="input-container">
-    <textarea id="user-input" placeholder="Type your response..."></textarea>
-    <div id="controls">
+  <div id="input-area">
+    <div id="text-row">
+      <textarea id="user-input" placeholder="Type your response..."></textarea>
       <button id="send-button">Send</button>
-      <button id="mic-button">🎤</button>
     </div>
+    <button id="mic-button">🎤</button>
   </div>
-
-  <script src="app.js"></script>
 </body>
 </html>
