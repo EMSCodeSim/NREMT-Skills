@@ -1,17 +1,16 @@
 {
-  "name": "nremt-skills-sim",
+  "name": "nremt-skills-simulator",
   "version": "1.0.0",
-  "description": "NREMT Skills Simulation with AI",
-  "type": "module",
-  "main": "index.js",
+  "description": "NREMT Skills Simulator",
   "scripts": {
-    "start": "netlify dev"
-      "build": "vite build"  // or replace with "react-scripts build" or your actual build command
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "openai": "^4.0.0"
+    "openai": "^4.20.0"
   },
   "devDependencies": {
-    "netlify-cli": "^15.11.0"
+    "vite": "^4.0.0"
   }
 }
