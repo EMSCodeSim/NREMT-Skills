@@ -1,13 +1,12 @@
-// ✅ Global variable to track patient voice preference
 let patientGender = "male";
 
 document.addEventListener('DOMContentLoaded', () => {
   let scenarioRunning = false;
   let micActive = false;
+  let scenarioContext = "";
   const micButton = document.getElementById('mic-button');
   window.hasSpoken = false;
 
-  // Preload voices for fallback TTS
   window.speechSynthesis.onvoiceschanged = () => {
     window.speechSynthesis.getVoices();
   };
@@ -32,25 +31,16 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('send-button').addEventListener('click', async () => {
     const input = document.getElementById('user-input');
     const message = input.value.trim();
-    if (message !== '') {
-      appendMessage("You", message, "User");
-      input.value = '';
+    if (message === "") return;
 
-      // 🔄 Trigger simple keyword-based replies
-      if (message.toLowerCase().includes("chest pain")) {
-        const reply = "Yes, it's a sharp, crushing pain that started about 10 minutes ago.";
-        appendMessage("Patient", reply, "Patient");
-        speakWithOpenAI(reply);
-      } else if (message.toLowerCase().includes("bp") || message.toLowerCase().includes("blood pressure")) {
-        const reply = "The proctor says his blood pressure is 92 over 58.";
-        appendMessage("Proctor", reply, "Proctor");
-        speakWithOpenAI(reply);
-      } else {
-        const reply = "I'm not sure what you mean. Can you clarify?";
-        appendMessage("Patient", reply, "Patient");
-        speakWithOpenAI(reply);
-      }
-    }
+    appendMessage("You", message, "User");
+    input.value = "";
+
+    const role = detectProctorIntent(message) ? "proctor" : "patient";
+    const reply = await getAIResponse(message, scenarioContext, role);
+
+    appendMessage(role === "proctor" ? "Proctor" : "Patient", reply, capitalize(role));
+    speakWithOpenAI(reply);
   });
 
   micButton.addEventListener('click', () => {
@@ -68,6 +58,8 @@ async function startScenario() {
     const scenario = await response.json();
 
     patientGender = (scenario.gender || "male").toLowerCase();
+    scenarioContext = `Patient: ${scenario.dispatch} ${scenario.scene_description}`;
+
     appendMessage("Dispatch", `🚑 Dispatch: ${scenario.dispatch}`, "Dispatch");
     appendMessage("Scene", `📍 Scene: ${scenario.scene_description}`);
 
@@ -80,10 +72,9 @@ async function startScenario() {
     chatBox.appendChild(img);
     chatBox.scrollTop = chatBox.scrollHeight;
 
-    // ✅ First patient response instead of prompt
-    const reply = "Yes, I'm having chest pain. It started suddenly, and it's getting worse.";
-    appendMessage("Patient", reply, "Patient");
-    speakWithOpenAI(reply);
+    const intro = "I'm having a crushing pain in my chest... it came on suddenly.";
+    appendMessage("Patient", intro, "Patient");
+    speakWithOpenAI(intro);
   } catch (err) {
     appendMessage("System", `⚠️ Scenario load error: ${err.message}`);
   }
@@ -108,20 +99,48 @@ async function speakWithOpenAI(text) {
   try {
     const response = await fetch("/.netlify/functions/tts", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        input: text,
-        voice: "nova"
-      })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ input: text, voice: "nova" })
     });
     const arrayBuffer = await response.arrayBuffer();
     const blob = new Blob([arrayBuffer], { type: "audio/mpeg" });
     const audioURL = URL.createObjectURL(blob);
-    const audio = new Audio(audioURL);
-    audio.play();
+    new Audio(audioURL).play();
   } catch (err) {
     console.error("TTS error:", err);
   }
+}
+
+async function getAIResponse(message, scenario, role) {
+  try {
+    const response = await fetch("/.netlify/functions/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message, scenario, role })
+    });
+    const data = await response.json();
+    return data.reply || "Sorry, no response.";
+  } catch (err) {
+    console.error("Chat error:", err);
+    return "Sorry, I couldn't understand that.";
+  }
+}
+
+function detectProctorIntent(msg) {
+  const lower = msg.toLowerCase();
+  return (
+    lower.includes("bp") ||
+    lower.includes("blood pressure") ||
+    lower.includes("vitals") ||
+    lower.includes("what is the") ||
+    lower.includes("i am giving") ||
+    lower.includes("i want to give") ||
+    lower.includes("als") ||
+    lower.includes("c-spine") ||
+    lower.includes("oxygen")
+  );
+}
+
+function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }
