@@ -1,10 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
   let scenarioRunning = false;
   let micActive = false;
+  let patientGender = "male"; // default
 
   const micButton = document.getElementById('mic-button');
 
-  // Preload voices for TTS
+  // Preload voices on load
   window.speechSynthesis.onvoiceschanged = () => {
     window.speechSynthesis.getVoices();
   };
@@ -32,12 +33,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const role = getRoleConfidence(input).role;
       micButton.disabled = true;
       const aiReply = await getAIResponse(input, role);
-      appendMessage(role === "patient" ? "Patient" : "Proctor", aiReply);
+      const speaker = role === "proctor" ? "Dispatch" : (patientGender === "female" ? "Patient-Female" : "Patient-Male");
+      appendMessage(role === "proctor" ? "Proctor" : "Patient", aiReply, speaker);
       micButton.disabled = false;
     }
   });
 
-  // ✅ Smart Mic with auto-send and TTS coordination
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (SpeechRecognition) {
     const recognition = new SpeechRecognition();
@@ -66,7 +67,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const role = getRoleConfidence(transcript).role;
         const aiReply = await getAIResponse(transcript, role);
-        appendMessage(role === "patient" ? "Patient" : "Proctor", aiReply);
+        const speaker = role === "proctor" ? "Dispatch" : (patientGender === "female" ? "Patient-Female" : "Patient-Male");
+        appendMessage(role === "proctor" ? "Proctor" : "Patient", aiReply, speaker);
 
         micButton.disabled = false;
       }
@@ -85,8 +87,8 @@ document.addEventListener('DOMContentLoaded', () => {
     console.warn("SpeechRecognition not supported in this browser.");
   }
 
-  // ✅ Append message + TTS
-  function appendMessage(sender, message) {
+  // Append message + voice tag
+  function appendMessage(sender, message, voiceTag = null) {
     const chatBox = document.getElementById('chat-box');
     const messageEl = document.createElement('div');
     messageEl.classList.add('chat-message');
@@ -94,23 +96,50 @@ document.addEventListener('DOMContentLoaded', () => {
     chatBox.appendChild(messageEl);
     chatBox.scrollTop = chatBox.scrollHeight;
 
-    if (sender === "Patient" || sender === "Proctor") {
-      speakMessage(message, sender);
+    if (voiceTag) {
+      speakMessage(message, voiceTag);
     }
   }
 
-  // ✅ TTS with different voices
+  // Speak using voice selection
   function speakMessage(text, speaker) {
     const synth = window.speechSynthesis;
     const utter = new SpeechSynthesisUtterance(text);
-
     const voices = synth.getVoices();
-    const patientVoice = voices.find(v => v.name.includes("Google") && v.name.includes("Female")) || voices[0];
-    const proctorVoice = voices.find(v => v.name.includes("Google") && v.name.includes("Male")) || voices[1];
 
-    utter.voice = speaker === "Proctor" ? proctorVoice : patientVoice;
-    utter.rate = speaker === "Proctor" ? 1.0 : 1.1;
-    utter.pitch = speaker === "Proctor" ? 0.9 : 1.2;
+    let patientMaleVoice =
+      voices.find(v => v.name === "Alex") ||
+      voices.find(v => v.name === "Microsoft David Desktop") ||
+      voices.find(v => v.name.includes("Google UK") && v.name.includes("Male")) ||
+      voices.find(v => v.name.toLowerCase().includes("male")) || voices[0];
+
+    let patientFemaleVoice =
+      voices.find(v => v.name === "Samantha") ||
+      voices.find(v => v.name === "Microsoft Zira Desktop") ||
+      voices.find(v => v.name.includes("Google US") && v.name.includes("English")) ||
+      voices.find(v => v.name.toLowerCase().includes("female")) || voices[1] || voices[0];
+
+    let dispatchVoice =
+      voices.find(v => v.name === "Victoria") ||
+      voices.find(v => v.name.includes("Google UK English Female")) ||
+      voices.find(v => v.name.toLowerCase().includes("female")) || voices[2] || voices[0];
+
+    // Voice + rate + pitch configs
+    if (speaker === "Patient-Male") {
+      utter.voice = patientMaleVoice;
+      utter.rate = 1.05;
+      utter.pitch = 1.0;
+    } else if (speaker === "Patient-Female") {
+      utter.voice = patientFemaleVoice;
+      utter.rate = 1.15;
+      utter.pitch = 1.3;
+    } else if (speaker === "Dispatch") {
+      utter.voice = dispatchVoice;
+      utter.rate = 1.0;
+      utter.pitch = 1.1;
+    } else {
+      utter.voice = voices[0];
+    }
 
     synth.speak(utter);
   }
@@ -125,7 +154,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const scenario = await response.json();
-      appendMessage("Dispatch", `🚑 Dispatch: ${scenario.dispatch}`);
+      patientGender = (scenario.gender || "male").toLowerCase();
+
+      appendMessage("Dispatch", `🚑 Dispatch: ${scenario.dispatch}`, "Dispatch");
       appendMessage("Scene", `📍 Scene: ${scenario.scene_description}`);
 
       const chatBox = document.getElementById('chat-box');
@@ -138,7 +169,8 @@ document.addEventListener('DOMContentLoaded', () => {
       chatBox.scrollTop = chatBox.scrollHeight;
 
       const aiReply = await getAIResponse("Do you have chest pain?", "patient");
-      appendMessage("Patient", aiReply);
+      const speaker = patientGender === "female" ? "Patient-Female" : "Patient-Male";
+      appendMessage("Patient", aiReply, speaker);
     } catch (err) {
       console.error("Scenario load error:", err);
       appendMessage("System", `⚠️ Failed to load scenario: ${err.message}`);
