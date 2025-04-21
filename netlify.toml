@@ -1,1 +1,20 @@
+[build]
+command = "npm run build"
+publish = "public"
+
+[functions]
+directory = "netlify/functions"
+node_bundler = "esbuild"
+
+[edge_functions]
+directory = "netlify/edge-functions"
+
+[[edge_functions]]
+function = "openai-stream"
+path = "/api/stream"  # or whatever public path you want to call this at
+
+[[redirects]]
+from = "/.netlify/functions/*"
+to = "/.netlify/functions/:splat"
+status = 200
 
