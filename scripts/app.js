@@ -2,25 +2,19 @@ document.addEventListener('DOMContentLoaded', () => {
   let scenarioRunning = false;
   let micActive = false;
 
-  // Start or End Scenario
   document.getElementById('scenario-button').addEventListener('click', () => {
     scenarioRunning = !scenarioRunning;
     document.getElementById('scenario-button').textContent = scenarioRunning ? 'End Scenario' : 'Start Scenario';
-    if (scenarioRunning) {
-      startScenario();
-    } else {
-      endScenario();
-    }
+    if (scenarioRunning) startScenario();
+    else endScenario();
   });
 
-  // Manual End Button
   document.getElementById('end-button').addEventListener('click', () => {
     scenarioRunning = false;
     document.getElementById('scenario-button').textContent = 'Start Scenario';
     endScenario();
   });
 
-  // Send Message
   document.getElementById('send-button').addEventListener('click', async () => {
     const inputBox = document.getElementById('user-input');
     const input = inputBox.value.trim();
@@ -34,16 +28,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Mic Toggle
   document.getElementById('mic-button').addEventListener('click', () => {
     micActive = !micActive;
     const micButton = document.getElementById('mic-button');
     micButton.classList.toggle('active', micActive);
     micButton.textContent = micActive ? '🎤 Listening...' : '🎤 Hold to Speak';
-    // You can add speech recognition logic here
   });
 
-  // Append Messages
   function appendMessage(sender, message) {
     const chatBox = document.getElementById('chat-box');
     const messageEl = document.createElement('div');
@@ -53,50 +44,67 @@ document.addEventListener('DOMContentLoaded', () => {
     chatBox.scrollTop = chatBox.scrollHeight;
   }
 
-  // Start Scenario
   async function startScenario() {
     appendMessage("System", "🟢 Scenario started.");
-
     try {
       const response = await fetch("/scenarios/chest_pain_001/scenario.json");
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+      }
+
       const scenario = await response.json();
-
-      // Dispatch info
       appendMessage("Dispatch", `🚑 Dispatch: ${scenario.dispatch}`);
+      appendMessage("Scene", `📍 Scene: ${scenario.scene_description}`);
 
-      // Wait before revealing scene for realism
-      setTimeout(() => {
-        const scene = scenario.scene_description || "Scene description not found.";
-        appendMessage("Scene", `📍 Scene: ${scene}`);
+      const chatBox = document.getElementById('chat-box');
+      const img = document.createElement('img');
+      img.src = "/scenarios/chest_pain_001/patient_1.jpg";
+      img.alt = "Patient";
+      img.style.maxWidth = "100%";
+      img.style.marginTop = "10px";
+      chatBox.appendChild(img);
+      chatBox.scrollTop = chatBox.scrollHeight;
 
-        // Show patient image
-        const chatBox = document.getElementById('chat-box');
-        const img = document.createElement('img');
-        img.src = "/scenarios/chest_pain_001/patient_1.jpg";
-        img.alt = "Patient";
-        img.style.maxWidth = "100%";
-        img.style.marginTop = "10px";
-        chatBox.appendChild(img);
-        chatBox.scrollTop = chatBox.scrollHeight;
-
-        // Trigger AI response after brief delay
-        setTimeout(async () => {
-          const aiReply = await getAIResponse("Do you have chest pain?", "patient");
-          appendMessage("Patient", aiReply);
-        }, 1000);
-
-      }, 1000);
-
-    } catch (error) {
-      console.error("Scenario loading failed:", error);
-      appendMessage("System", "⚠️ Failed to load scenario.");
+      const aiReply = await getAIResponse("Do you have chest pain?", "patient");
+      appendMessage("Patient", aiReply);
+    } catch (err) {
+      console.error("Scenario load error:", err);
+      appendMessage("System", `⚠️ Failed to load scenario: ${err.message}`);
     }
   }
 
-  // End Scenario
   function endScenario() {
     appendMessage("System", "🔴 Scenario ended.");
   }
 
-  // Role Detection Logic
-  function getRoleConfidence
+  function getRoleConfidence(message) {
+    const lower = message.toLowerCase();
+    const proctorKeywords = ["blood pressure", "pulse", "respirations", "bgl", "oxygen"];
+    const patientKeywords = ["pain", "symptom", "feel", "describe", "history", "allergies"];
+
+    if (patientKeywords.some(word => lower.includes(word))) return { role: "patient" };
+    if (proctorKeywords.some(word => lower.includes(word))) return { role: "proctor" };
+    return { role: "patient" };
+  }
+
+  async function getAIResponse(message, role = "patient") {
+    try {
+      const response = await fetch("/.netlify/functions/openai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: message,
+          role: role,
+          context: "You are a simulated EMS patient. Respond appropriately."
+        })
+      });
+
+      const data = await response.json();
+      return data.response || "No response from AI.";
+    } catch (error) {
+      console.error("AI request error:", error);
+      return "⚠️ Error getting AI response.";
+    }
+  }
+});
