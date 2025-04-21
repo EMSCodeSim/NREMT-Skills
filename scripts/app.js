@@ -1,12 +1,14 @@
+// ✅ Global variables
 let patientGender = "male";
+let scenarioContext = "";
 
 document.addEventListener('DOMContentLoaded', () => {
   let scenarioRunning = false;
   let micActive = false;
-  let scenarioContext = "";
   const micButton = document.getElementById('mic-button');
   window.hasSpoken = false;
 
+  // Preload voices
   window.speechSynthesis.onvoiceschanged = () => {
     window.speechSynthesis.getVoices();
   };
