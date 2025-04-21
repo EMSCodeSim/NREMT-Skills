@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const micButton = document.getElementById('mic-button');
   window.hasSpoken = false;
 
-  // Preload voices for TTS
   window.speechSynthesis.onvoiceschanged = () => {
     window.speechSynthesis.getVoices();
   };
@@ -64,7 +63,9 @@ async function startScenario() {
     chatBox.appendChild(img);
     chatBox.scrollTop = chatBox.scrollHeight;
 
-    await getAIResponseStream("Do you have chest pain?", "patient");
+    const line = "Do you have chest pain?";
+    appendMessage("Patient", line, "Patient");
+    speakWithOpenAI(line);
   } catch (err) {
     appendMessage("System", `⚠️ Scenario load error: ${err.message}`);
   }
@@ -73,5 +74,36 @@ async function startScenario() {
 function endScenario() {
   appendMessage("System", "🔴 Scenario ended.");
   const chatBox = document.getElementById('chat-box');
-  chatBox.innerHTML = ''; // Clear conversation
+  chatBox.innerHTML = '';
+}
+
+function appendMessage(sender, message, role = "System") {
+  const chatBox = document.getElementById('chat-box');
+  const bubble = document.createElement('div');
+  bubble.classList.add('chat-bubble', role.toLowerCase());
+  bubble.innerHTML = `<strong>${sender}:</strong> ${message}`;
+  chatBox.appendChild(bubble);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+async function speakWithOpenAI(text) {
+  try {
+    const response = await fetch("/.netlify/functions/tts", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        input: text,
+        voice: "nova"
+      })
+    });
+    const arrayBuffer = await response.arrayBuffer();
+    const blob = new Blob([arrayBuffer], { type: "audio/mpeg" });
+    const audioURL = URL.createObjectURL(blob);
+    const audio = new Audio(audioURL);
+    audio.play();
+  } catch (err) {
+    console.error("TTS error:", err);
+  }
 }
