@@ -1,7 +1,6 @@
 const { OpenAI } = require("openai");
-const proctorPrompt = require("../../scenarios/chest_pain_001/proctor.json");
-const patientPrompt = require("../../scenarios/chest_pain_001/patient.json");
-const vitals = require("../../scenarios/chest_pain_001/vitals.json");
+const fs = require("fs");
+const path = require("path");
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -13,6 +12,20 @@ const sessionMemory = {
   askedBGL: false,
   askedLungSounds: false
 };
+
+function loadJSON(relativePath) {
+  try {
+    const fullPath = path.resolve(__dirname, relativePath);
+    return JSON.parse(fs.readFileSync(fullPath, "utf8"));
+  } catch (err) {
+    console.error(`Failed to load ${relativePath}:`, err);
+    return {};
+  }
+}
+
+const proctorPrompt = loadJSON("../../scenarios/chest_pain_001/proctor.json");
+const patientPrompt = loadJSON("../../scenarios/chest_pain_001/patient.json");
+const vitals = loadJSON("../../scenarios/chest_pain_001/vitals.json");
 
 function getRoleConfidence(message) {
   const lower = message.toLowerCase();
@@ -37,77 +50,7 @@ function getRoleConfidence(message) {
     if (pattern.test(lower)) return { role: "proctor", confidence: "High" };
   }
 
-  return { role: "patient", confidence: "Low" }; // Default to patient
+  return { role: "patient", confidence: "Low" };
 }
 
-function updateMemory(message) {
-  const lower = message.toLowerCase();
-  if (lower.includes("324") || lower.includes("asa")) sessionMemory.gaveASA = true;
-  if (lower.includes("oxygen")) sessionMemory.gaveOxygen = true;
-  if (lower.includes("blood pressure")) sessionMemory.askedBP = true;
-  if (lower.includes("pulse")) sessionMemory.askedPulse = true;
-  if (lower.includes("bgl") || lower.includes("blood sugar")) sessionMemory.askedBGL = true;
-  if (lower.includes("lung sounds") || lower.includes("breath sounds")) sessionMemory.askedLungSounds = true;
-}
-
-function injectVitals(template) {
-  return template
-    .replace(/\[BP\]/g, vitals.blood_pressure)
-    .replace(/\[PULSE\]/g, vitals.pulse)
-    .replace(/\[RESPIRATIONS\]/g, vitals.respirations)
-    .replace(/\[O2SAT\]/g, vitals.oxygen_saturation)
-    .replace(/\[BGL\]/g, vitals.bgl)
-    .replace(/\[LUNG_SOUNDS\]/g, vitals.lung_sounds || "Clear and equal bilaterally");
-}
-
-exports.handler = async (event) => {
-  try {
-    const body = JSON.parse(event.body);
-    const { message, role: manualRole, context } = body;
-
-    if (!message) {
-      return { statusCode: 400, body: JSON.stringify({ response: "Missing message." }) };
-    }
-
-    // Determine role automatically unless specified
-    const routing = manualRole ? { role: manualRole, confidence: "Manual" } : getRoleConfidence(message);
-    const role = routing.role;
-
-    updateMemory(message);
-
-    let systemPrompt = "";
-    if (role === "proctor") {
-      systemPrompt = proctorPrompt.content
-        ? injectVitals(proctorPrompt.content)
-        : "You are a NREMT test proctor. Respond with vitals, unseen cues, and treatment confirmations.";
-    } else {
-      systemPrompt = patientPrompt.content
-        ? patientPrompt.content
-        : "You are a patient experiencing a medical emergency. Respond as realistically and emotionally as possible.";
-    }
-
-    const model = role === "patient" ? "gpt-4-turbo" : "gpt-3.5-turbo";
-
-    const chat = await openai.chat.completions.create({
-      model,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: message }
-      ],
-      temperature: 0.7,
-      max_tokens: 300
-    });
-
-    const reply = chat.choices[0]?.message?.content || "No response generated.";
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ response: reply, role })
-    };
-  } catch (err) {
-    console.error("❌ openai.js error:", err);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ response: "Internal server error." })
-    };
-  }
-};
+function updateMemory
