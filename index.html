@@ -1,18 +1,46 @@
-<script>
-  console.log("Page loaded");
-
-  document.addEventListener("DOMContentLoaded", () => {
-    console.log("DOM ready");
-
-    const btn = document.getElementById("scenario-button");
-    if (btn) {
-      console.log("Scenario button found");
-      btn.addEventListener("click", () => {
-        console.log("Scenario clicked");
-        alert("Scenario started!");
-      });
-    } else {
-      console.warn("Scenario button NOT found!");
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EMS Code Sim</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background: #eef;
     }
-  });
-</script>
+    .chat-box {
+      height: 200px;
+      overflow-y: auto;
+      background: white;
+      padding: 10px;
+      border: 1px solid #ccc;
+      margin-bottom: 10px;
+    }
+    .input-row {
+      display: flex;
+    }
+    input {
+      flex: 1;
+      padding: 10px;
+    }
+    button {
+      padding: 10px;
+      margin-left: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>EMS Code Sim</h1>
+  <div class="chat-box" id="chat-display">Welcome to the simulation.</div>
+  <div class="input-row">
+    <input id="user-input" type="text" placeholder="Type here..." />
+    <button id="send-button">Send</button>
+  </div>
+  <button id="scenario-button">Start Scenario</button>
+  <button id="end-button">End Scenario</button>
+
+  <script src="scripts/app.js"></script>
+</body>
+</html>
