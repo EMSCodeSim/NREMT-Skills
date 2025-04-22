@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.hasSpoken = true;
   }, { once: true });
 
-  scenarioBtn.addEventListener('click', async () => {
+  scenarioBtn.addEventListener('click', () => {
     scenarioRunning = !scenarioRunning;
     scenarioBtn.textContent = scenarioRunning ? 'End Scenario' : 'Start Scenario';
     if (scenarioRunning) {
