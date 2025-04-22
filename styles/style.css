@@ -1,34 +1,31 @@
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background: #a7dbe9;
+  background-color: #a7dbe9;
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
 }
 
-.main-container {
-  background: white;
-  border-radius: 12px;
-  width: 95%;
-  max-width: 500px;
-  height: 95vh;
+.main-wrapper {
+  width: 100%;
+  max-width: 430px;
+  height: 100vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  overflow: hidden;
+  background-color: #a7dbe9;
 }
 
-.header {
-  background: #a7dbe9;
-  padding: 10px;
+.header-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  background-color: #a7dbe9;
+  padding: 12px;
 }
 
-.back-btn {
+.nav-back {
   background: none;
   border: none;
   font-size: 16px;
@@ -38,20 +35,28 @@ body {
 
 .logo {
   font-weight: bold;
-  font-size: 18px;
+  font-size: 20px;
+  color: white;
+  flex-grow: 1;
+  text-align: center;
 }
 
-.scenario-buttons button {
-  margin-left: 8px;
+.scenario-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.btn {
   padding: 8px 12px;
-  border: none;
-  border-radius: 6px;
   font-weight: bold;
+  border-radius: 6px;
+  border: none;
   cursor: pointer;
+  font-size: 14px;
 }
 
 .start-btn {
-  background-color: #2c8f91;
+  background-color: #218b8b;
   color: white;
 }
 
@@ -60,53 +65,53 @@ body {
   color: white;
 }
 
-.chat-display {
+.chat-box {
   flex-grow: 1;
-  background: #fff;
+  background-color: white;
+  margin: 10px;
+  border-radius: 8px;
   padding: 10px;
   overflow-y: auto;
-  border-top: 1px solid #ccc;
-  border-bottom: 1px solid #ccc;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
 }
 
-.input-section {
+.input-row {
   display: flex;
-  padding: 10px;
-  background: white;
-  border-top: 1px solid #ccc;
+  padding: 8px 10px;
+  background-color: white;
+  gap: 8px;
 }
 
 #userInput {
-  flex-grow: 1;
-  padding: 10px;
+  flex: 1;
+  padding: 12px;
+  font-size: 16px;
   border-radius: 8px;
   border: 1px solid #ccc;
-  font-size: 16px;
 }
 
 #sendButton {
-  margin-left: 10px;
-  padding: 10px 16px;
+  padding: 12px 16px;
   font-size: 16px;
-  background-color: #ddd;
-  border: none;
   border-radius: 8px;
+  background-color: #f1f1f1;
+  border: 1px solid #ccc;
   cursor: pointer;
 }
 
-.mic-section {
+.mic-wrapper {
   display: flex;
   justify-content: center;
   padding: 10px;
-  background: white;
+  background-color: white;
 }
 
 .mic-button {
   font-size: 24px;
-  background-color: #f0f0f0;
-  border: none;
+  background-color: white;
   border-radius: 50%;
   padding: 12px;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
   cursor: pointer;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
