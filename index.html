@@ -2,36 +2,35 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>EMS Code Sim</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div class="main-container">
+    <header class="header">
+      <button class="back-btn">← Back</button>
+      <div class="logo">OpenAI</div>
+      <div class="scenario-buttons">
+        <button class="start-btn">Start Scenario</button>
+        <button class="end-btn">End Scenario</button>
+      </div>
+    </header>
 
-  <!-- ✅ Responsive Header with Scenario Controls -->
-  <header>
-    <button id="scenario-button">Start Scenario</button>
-    <div id="header-title">EMS Code Sim</div>
-    <button id="end-button">End Scenario</button>
-  </header>
+    <div class="chat-display" id="chatDisplay">
+      <!-- AI and User messages will appear here -->
+    </div>
 
-  <!-- ✅ AI Chat Display Box -->
-  <main id="chat-box">
-    <!-- Messages will appear here -->
-  </main>
+    <div class="input-section">
+      <input type="text" id="userInput" placeholder="User Input" />
+      <button id="sendButton">Send</button>
+    </div>
 
-  <!-- ✅ User Input Area -->
-  <footer>
-    <input type="text" id="user-input" placeholder="User Input" />
-    <button id="send-button">Send</button>
-  </footer>
-
-  <!-- ✅ Centered Mic Button -->
-  <div style="margin-bottom: 20px;">
-    <button id="mic-button">🎤</button>
+    <div class="mic-section">
+      <button class="mic-button" id="micButton">🎤</button>
+    </div>
   </div>
 
-  <!-- ✅ JavaScript Logic -->
-  <script src="scripts/app.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
