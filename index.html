@@ -1,32 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>EMS Code Sim</title>
-  <link rel="stylesheet" href="styles/style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+  <!-- ✅ White Responsive Header -->
   <header>
-    <img src="emscodesim.png" alt="EMS Code Sim" class="logo">
-    <div class="header-buttons">
+    <div id="header-title">EMS Code Sim</div>
+    <div>
       <button id="scenario-button">Start Scenario</button>
       <button id="end-button">End Scenario</button>
     </div>
   </header>
 
-  <div id="chat-container">
-    <div id="chat-box"></div>
+  <!-- ✅ AI Response Display Box -->
+  <main id="chat-box">
+    <!-- Messages will appear here -->
+  </main>
 
-    <div id="input-container">
-      <textarea id="user-input" rows="2" placeholder="Type your response here..."></textarea>
-      <button id="send-button">Send</button>
-    </div>
+  <!-- ✅ User Input Footer -->
+  <footer>
+    <input type="text" id="user-input" placeholder="Type your message..." />
+    <button id="send-button">Send</button>
+    <button id="mic-button">🎤</button>
+  </footer>
 
-    <button id="mic-button">🎤 Hold to Speak</button>
-  </div>
-
-  <!-- ✅ JS loads after content is rendered -->
-  <script type="module" src="scripts/app.js"></script>
+  <!-- ✅ App logic -->
+  <script src="scripts/app.js"></script>
 </body>
 </html>
