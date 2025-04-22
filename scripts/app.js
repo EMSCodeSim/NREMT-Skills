@@ -1,9 +1,9 @@
 let patientGender = "male";
 let scenarioContext = "";
+let currentPatientData = null;
 
 document.addEventListener('DOMContentLoaded', () => {
   let scenarioRunning = false;
-  let micActive = false;
 
   const micButton = document.getElementById('mic-button');
   const scenarioBtn = document.getElementById('scenario-button');
@@ -22,11 +22,14 @@ document.addEventListener('DOMContentLoaded', () => {
     window.hasSpoken = true;
   }, { once: true });
 
-  scenarioBtn.addEventListener('click', () => {
+  scenarioBtn.addEventListener('click', async () => {
     scenarioRunning = !scenarioRunning;
     scenarioBtn.textContent = scenarioRunning ? 'End Scenario' : 'Start Scenario';
-    if (scenarioRunning) startScenario();
-    else endScenario();
+    if (scenarioRunning) {
+      await startScenario();
+    } else {
+      endScenario();
+    }
   });
 
   endBtn.addEventListener('click', () => {
@@ -49,30 +52,4 @@ document.addEventListener('DOMContentLoaded', () => {
     speakWithOpenAI(reply, role === "proctor" ? "alloy" : "nova");
   });
 
-  micButton.addEventListener('click', () => {
-    alert("Mic button clicked (implement speech-to-text here)");
-  });
-});
-
-function startScenario() {
-  appendMessage("System", "Scenario Started. Awaiting dispatch...", "System");
-  // You can trigger more setup logic here
-}
-
-function endScenario() {
-  appendMessage("System", "Scenario Ended. Thank you.", "System");
-}
-
-function appendMessage(sender, text, role) {
-  const msg = document.createElement("div");
-  msg.className = `chat-bubble ${role.toLowerCase()}`;
-  msg.innerHTML = `<strong>${sender}:</strong> ${text}`;
-  document.getElementById("chat-display").appendChild(msg);
-  msg.scrollIntoView({ behavior: "smooth" });
-}
-
-async function speakWithOpenAI(text, voice = "nova") {
-  try {
-    const response = await fetch("/.netlify/functions/tts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json"
+  micButton.addEventListener('click
