@@ -1,19 +1,27 @@
-body {
+* {
+  box-sizing: border-box;
   margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
   font-family: Arial, sans-serif;
   background-color: #a7dbe9;
+}
+
+body {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
 }
 
 .main-wrapper {
+  display: flex;
+  flex-direction: column;
   width: 100%;
   max-width: 430px;
   height: 100vh;
-  display: flex;
-  flex-direction: column;
   background-color: #a7dbe9;
 }
 
@@ -82,7 +90,7 @@ body {
   gap: 8px;
 }
 
-#userInput {
+#user-input {
   flex: 1;
   padding: 12px;
   font-size: 16px;
@@ -90,7 +98,7 @@ body {
   border: 1px solid #ccc;
 }
 
-#sendButton {
+#send-button {
   padding: 12px 16px;
   font-size: 16px;
   border-radius: 8px;
