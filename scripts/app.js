@@ -1,4 +1,3 @@
-// ✅ Global variables
 let patientGender = "male";
 let scenarioContext = "";
 
@@ -8,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const micButton = document.getElementById('mic-button');
   window.hasSpoken = false;
 
+  // Preload TTS voices
   window.speechSynthesis.onvoiceschanged = () => {
     window.speechSynthesis.getVoices();
   };
@@ -41,14 +41,47 @@ document.addEventListener('DOMContentLoaded', () => {
     const reply = await getAIResponse(message, scenarioContext, role);
 
     appendMessage(role === "proctor" ? "Proctor" : "Patient", reply, capitalize(role));
-    speakWithOpenAI(reply, role);  // ✅ Pass role to TTS function
+    speakWithOpenAI(reply, role);
   });
+
+  // ✅ Mic logic using Web Speech API
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const recognition = new SpeechRecognition();
+  recognition.lang = 'en-US';
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
 
   micButton.addEventListener('click', () => {
     micActive = !micActive;
     micButton.classList.toggle("active", micActive);
-    appendMessage("System", micActive ? "🎤 Listening..." : "🛑 Mic off.");
+
+    if (micActive) {
+      appendMessage("System", "🎤 Listening...");
+      recognition.start();
+    } else {
+      appendMessage("System", "🛑 Mic off.");
+      recognition.stop();
+    }
   });
+
+  recognition.onresult = async (event) => {
+    const transcript = event.results[0][0].transcript.trim();
+    appendMessage("You", transcript, "User");
+
+    const role = detectProctorIntent(transcript) ? "proctor" : "patient";
+    const reply = await getAIResponse(transcript, scenarioContext, role);
+    appendMessage(role === "proctor" ? "Proctor" : "Patient", reply, capitalize(role));
+    speakWithOpenAI(reply, role);
+
+    micActive = false;
+    micButton.classList.remove("active");
+  };
+
+  recognition.onerror = (event) => {
+    appendMessage("System", `⚠️ Mic error: ${event.error}`);
+    micActive = false;
+    micButton.classList.remove("active");
+  };
 });
 
 async function startScenario() {
@@ -131,15 +164,24 @@ async function getAIResponse(message, scenario, role) {
 function detectProctorIntent(msg) {
   const lower = msg.toLowerCase();
   return (
-    lower.includes("bp") ||
-    lower.includes("blood pressure") ||
-    lower.includes("vitals") ||
-    lower.includes("what is the") ||
-    lower.includes("i am giving") ||
-    lower.includes("i want to give") ||
+    lower.includes("scene") ||
+    lower.includes("bsi") ||
+    lower.includes("how many patients") ||
+    lower.includes("pulse") ||
+    lower.includes("check airway") ||
     lower.includes("als") ||
-    lower.includes("c-spine") ||
-    lower.includes("oxygen")
+    lower.includes("asa") ||
+    lower.includes("oxygen") ||
+    lower.includes("impression") ||
+    lower.includes("responsive") ||
+    lower.includes("diagnostics") ||
+    lower.includes("back of his head") ||
+    lower.includes("vitals") ||
+    lower.includes("blood pressure") ||
+    lower.includes("respiratory rate") ||
+    lower.includes("spo2") ||
+    lower.includes("glucose") ||
+    lower.includes("pupils")
   );
 }
 
