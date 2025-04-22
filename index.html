@@ -7,30 +7,30 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="main-container">
-    <header class="header">
-      <button class="back-btn">← Back</button>
+  <div class="main-wrapper">
+    <div class="header-bar">
+      <button class="nav-back">← Back</button>
       <div class="logo">OpenAI</div>
       <div class="scenario-buttons">
-        <button class="start-btn">Start Scenario</button>
-        <button class="end-btn">End Scenario</button>
+        <button id="scenario-button" class="btn start-btn">Start Scenario</button>
+        <button id="end-button" class="btn end-btn">End Scenario</button>
       </div>
-    </header>
-
-    <div class="chat-display" id="chatDisplay">
-      <!-- AI and User messages will appear here -->
     </div>
 
-    <div class="input-section">
-      <input type="text" id="userInput" placeholder="User Input" />
-      <button id="sendButton">Send</button>
+    <div id="chat-display" class="chat-box">
+      <!-- Scenario messages will appear here -->
     </div>
 
-    <div class="mic-section">
-      <button class="mic-button" id="micButton">🎤</button>
+    <div class="input-row">
+      <input type="text" id="user-input" placeholder="User Input" />
+      <button id="send-button">Send</button>
+    </div>
+
+    <div class="mic-wrapper">
+      <button id="mic-button" class="mic-button">🎤</button>
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <script src="scripts/app.js"></script>
 </body>
 </html>
