@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>EMS Code Sim</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
   <div class="main-wrapper">
@@ -17,9 +17,7 @@
       </div>
     </div>
 
-    <div id="chat-display" class="chat-box">
-      <!-- Chat messages will go here -->
-    </div>
+    <div id="chat-display" class="chat-box"></div>
 
     <div class="input-row">
       <input type="text" id="user-input" placeholder="User Input" />
@@ -31,6 +29,7 @@
     </div>
   </div>
 
-  <script src="scripts/app.js"></script>
+  <!-- Load JavaScript at the end to avoid DOM issues -->
+  <script src="./scripts/app.js" defer></script>
 </body>
 </html>
