@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const micButton = document.getElementById('mic-button');
   window.hasSpoken = false;
 
-  // Preload TTS voices
   window.speechSynthesis.onvoiceschanged = () => {
     window.speechSynthesis.getVoices();
   };
@@ -131,7 +130,7 @@ function appendMessage(sender, message, role = "System") {
 
 async function speakWithOpenAI(text, role = "patient") {
   try {
-    const voice = role === "proctor" ? "onyx" : "fable";
+    const voice = role === "proctor" ? "alloy" : "fable";  // ✅ updated here
     const response = await fetch("/.netlify/functions/tts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -163,26 +162,15 @@ async function getAIResponse(message, scenario, role) {
 
 function detectProctorIntent(msg) {
   const lower = msg.toLowerCase();
-  return (
-    lower.includes("scene") ||
-    lower.includes("bsi") ||
-    lower.includes("how many patients") ||
-    lower.includes("pulse") ||
-    lower.includes("check airway") ||
-    lower.includes("als") ||
-    lower.includes("asa") ||
-    lower.includes("oxygen") ||
-    lower.includes("impression") ||
-    lower.includes("responsive") ||
-    lower.includes("diagnostics") ||
-    lower.includes("back of his head") ||
-    lower.includes("vitals") ||
-    lower.includes("blood pressure") ||
-    lower.includes("respiratory rate") ||
-    lower.includes("spo2") ||
-    lower.includes("glucose") ||
-    lower.includes("pupils")
-  );
+  const keywords = [
+    "bsi", "scene", "how many patients", "is this the only patient",
+    "check pulse", "what is the pulse", "assess pulse", "check airway",
+    "noi", "als", "asa", "324mg", "oxygen", "nrb",
+    "general impression", "responsive to", "unresponsive",
+    "diagnostics", "vitals", "blood pressure", "respiratory rate",
+    "spo2", "glucose", "blood sugar", "pupils", "head"
+  ];
+  return keywords.some(keyword => lower.includes(keyword));
 }
 
 function capitalize(str) {
