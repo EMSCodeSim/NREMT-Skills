@@ -3,25 +3,25 @@ console.log("✅ app.js loaded");
 document.addEventListener("DOMContentLoaded", () => {
   console.log("✅ DOM loaded");
 
-  const display = document.getElementById("chat-display");
+  const chatBox = document.getElementById("chat-display");
   const input = document.getElementById("user-input");
-  const sendBtn = document.getElementById("send-button");
-  const scenarioBtn = document.getElementById("scenario-button");
-  const endBtn = document.getElementById("end-button");
+  const sendButton = document.getElementById("send-button");
+  const startButton = document.getElementById("scenario-button");
+  const endButton = document.getElementById("end-button");
 
-  sendBtn.addEventListener("click", () => {
+  sendButton.addEventListener("click", () => {
     const message = input.value.trim();
     if (message !== "") {
-      display.innerHTML += `<div><strong>You:</strong> ${message}</div>`;
+      chatBox.innerHTML += `<div><strong>You:</strong> ${message}</div>`;
       input.value = "";
     }
   });
 
-  scenarioBtn.addEventListener("click", () => {
-    display.innerHTML += `<div><em>Scenario started...</em></div>`;
+  startButton.addEventListener("click", () => {
+    chatBox.innerHTML += `<div><em>Scenario started...</em></div>`;
   });
 
-  endBtn.addEventListener("click", () => {
-    display.innerHTML += `<div><em>Scenario ended.</em></div>`;
+  endButton.addEventListener("click", () => {
+    chatBox.innerHTML += `<div><em>Scenario ended.</em></div>`;
   });
 });
