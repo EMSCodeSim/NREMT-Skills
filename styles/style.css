@@ -1,45 +1,62 @@
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background-color: #f0f0f0;
+  background: linear-gradient(to bottom right, #add8e6, #87ceeb);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  height: 100vh;
 }
 
 header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 20px;
-  background-color: white; /* Header is now white */
-  color: black;
-  flex-wrap: wrap;
-  border-bottom: 1px solid #ddd;
+  width: 90%;
+  max-width: 500px;
+  margin-top: 10px;
 }
 
 #header-title {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: bold;
+  color: white;
 }
 
-/* Main content area */
+button {
+  padding: 10px 16px;
+  font-size: 14px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: white;
+}
+
+#scenario-button {
+  background-color: #00796b;
+}
+
+#end-button {
+  background-color: #d32f2f;
+}
+
 #chat-box {
-  height: 70vh;
-  overflow-y: auto;
-  background: #fff;
+  background-color: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  height: 50vh;
+  margin: 12px 0;
   padding: 12px;
-  border-top: 1px solid #ccc;
-  border-bottom: 1px solid #ccc;
+  overflow-y: auto;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
 .chat-bubble {
+  margin-bottom: 10px;
   padding: 10px;
-  border-radius: 12px;
-  margin-bottom: 8px;
-  max-width: 85%;
-}
-
-.chat-bubble.user {
-  background-color: #d0eaff;
-  align-self: flex-end;
+  border-radius: 10px;
 }
 
 .chat-bubble.patient {
@@ -47,54 +64,47 @@ header {
 }
 
 .chat-bubble.proctor {
-  background-color: #e6e6ff;
+  background-color: #e0eaff;
 }
 
-.chat-bubble.system {
-  background-color: #f2f2f2;
-  font-style: italic;
+.chat-bubble.user {
+  background-color: #d7f0ff;
+  align-self: flex-end;
 }
 
 footer {
   display: flex;
-  padding: 12px;
-  background-color: #fff;
-  border-top: 1px solid #ddd;
+  justify-content: center;
+  width: 90%;
+  max-width: 500px;
+  margin-bottom: 12px;
 }
 
 #user-input {
   flex: 1;
   padding: 10px;
   font-size: 16px;
-  margin-right: 8px;
+  border-radius: 6px;
   border: 1px solid #ccc;
-  border-radius: 6px;
+  margin-right: 8px;
 }
 
-button {
-  padding: 10px 14px;
-  font-size: 14px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  background-color: #007bff;
+#send-button {
+  background-color: #444;
   color: white;
+  border-radius: 6px;
+  padding: 10px 14px;
 }
 
-#mic-button.active {
-  background-color: #28a745;
-}
-
-/* ✅ Responsive header for small screens */
-@media (max-width: 600px) {
-  header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  #scenario-button,
-  #end-button {
-    align-self: flex-end;
-    margin-top: 6px;
-  }
+#mic-button {
+  margin-top: 10px;
+  background-color: white;
+  border: none;
+  border-radius: 50%;
+  padding: 14px;
+  width: 60px;
+  height: 60px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  font-size: 24px;
+  color: #333;
 }
