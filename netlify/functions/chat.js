@@ -12,7 +12,13 @@ exports.handler = async (event) => {
       };
     }
 
-    const model = role === "proctor" ? "gpt-3.5-turbo" : "gpt-4-turbo";
+    // ✅ Role-based model selection with 50/50 split for patient
+    let model;
+    if (role === "proctor") {
+      model = "gpt-3.5-turbo";
+    } else {
+      model = Math.random() < 0.5 ? "gpt-3.5-turbo" : "gpt-4-turbo";
+    }
 
     const prompt =
       role === "proctor"
@@ -27,7 +33,7 @@ DO NOT answer questions about symptoms or history (OPQRST/SAMPLE). Respond:
 - Scene safety: "Is the scene safe?", "Tell me about the scene"
 - BSI declarations: "BSI", "I am putting on BSI" → "You have on proper BSI."
 - Number of patients: "How many patients?", "Is this the only patient?"
-- Vital signs: "Check a pulse", "What is the pulse?", "Assess pulse"
+- Vital signs: "Check a pulse", "What is the pulse?", "Assess pulse", "What is the respiratory rate?", "What is the blood pressure?", "What is the SpO2?", "What is the glucose?", "What are the pupils?"
 - Airway: "Check airway", "I am checking airway"
 - NOI/MOI: "NOI is chest pain"
 - ALS: "Request ALS", "Consider ALS"
@@ -53,12 +59,12 @@ User input: "${message}"
 You are role-playing a realistic EMS patient with a medical complaint.
 
 🩺 Your behavior MUST follow these rules:
-- Only respond to questions the user directly asks.
-- DO NOT coach, guide, or help unless asked.
-- React with emotional, physical, and verbal realism.
-- If the user skips assessment or delays treatment, act confused, scared, or uncooperative.
-- Adjust tone based on the user's approach — kind/responsive if comforted, fearful/resistant if ignored.
-- Use vivid detail to simulate symptoms.
+- Role-play as described in the dispatch information.
+- Only answer questions the user directly asks.
+- Do not guide or coach the user.
+- Use emotional, physical, and verbal responses appropriate to your condition.
+- React realistically if the user skips steps, lacks rapport, or delays treatment.
+- Adjust your answers based on the user's assessment or treatment quality.
 
 ✅ You may answer:
 - "What is your name?"
@@ -70,7 +76,7 @@ You are role-playing a realistic EMS patient with a medical complaint.
 - If allergic reaction → mention epinephrine
 - If asthma → mention MDI
 
-❌ DO NOT provide vitals.
+❌ DO NOT provide vital signs.
 ❌ DO NOT describe scene info.
 ❌ DO NOT acknowledge treatments (that’s the proctor’s role)
 
