@@ -1,6 +1,8 @@
 const { OpenAI } = require("openai");
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+let patientMessageCount = 0; // Track number of patient responses
+
 exports.handler = async (event) => {
   try {
     let { message, scenario, role } = JSON.parse(event.body);
@@ -12,55 +14,54 @@ exports.handler = async (event) => {
       };
     }
 
-    // Step 1: Phrase match for proctor role
+    // Step 1: Phrase match, then AI classify if needed
     if (!role || role === "auto") {
       const phraseMatch = detectProctorIntent(message) ? "proctor" : null;
       if (phraseMatch) {
         role = phraseMatch;
       } else {
-        // Step 2: Use GPT-3.5 to classify the role
         role = await classifyRole(message);
-        if (!role) role = "patient"; // Step 3: fallback default
+        if (!role) role = "patient";
       }
     }
 
-    // Step 4: Choose GPT model
+    // Step 2: Model logic
     let model;
     if (role === "proctor") {
       model = "gpt-3.5-turbo";
     } else {
-      model = Math.random() < 0.5 ? "gpt-3.5-turbo" : "gpt-4-turbo";
+      patientMessageCount++;
+      model = patientMessageCount <= 2
+        ? "gpt-4-turbo"
+        : Math.random() < 0.05 ? "gpt-4-turbo" : "gpt-3.5-turbo";
     }
 
-    // Step 5: Set prompt for proctor/patient
+    // Step 3: Prompt
     const prompt =
       role === "proctor"
         ? `
 You are a certified NREMT test proctor in an EMS simulation.
 
-🧑‍⚕️ You ONLY respond to questions the patient would not know. DO NOT answer questions about pain, symptoms, emotions, or SAMPLE/OPQRST history. If asked about those, respond:
-"That’s a question for the patient."
+🧑‍⚕️ Respond only to questions the patient would not know. If asked about pain, symptoms, or OPQRST/SAMPLE, respond: "That’s a question for the patient."
 
-✅ You MUST respond to questions or statements like:
-- "BSI", "I am wearing BSI" → "You have on proper BSI."
+✅ Respond to:
+- "BSI" → "You have on proper BSI."
 - "Is the scene safe?" → "Yes, the scene is safe."
-- "How many patients are there?" → "Only one patient is visible."
-- "What is the pulse?" → "Pulse is 112 and regular."
+- "How many patients?" → "Only one patient is visible."
+- "Pulse?" → "Pulse is 112 and regular."
 - "Check airway" → "Airway is open and unobstructed."
-- "What is the blood pressure?" → "Blood pressure is 92/58."
-- "Respiratory rate?" → "Respirations are 26 and shallow."
+- "BP?" → "Blood pressure is 92/58."
+- "Respirations?" → "Respiratory rate is 26 and shallow."
 - "SpO2?" → "Oxygen saturation is 89% on room air."
 - "Blood glucose?" → "Blood glucose is 78 mg/dL."
-- "Are pupils equal and reactive?" → "Pupils are equal and reactive to light."
-- "I am giving 324mg aspirin" → "Aspirin administered. Noted."
-- "Place patient on 15L NRB" → "Oxygen applied. Noted."
+- "Pupils?" → "Pupils are equal and reactive to light."
+- "Give 324mg ASA" → "Aspirin administered. Noted."
+- "15L O2 NRB" → "Oxygen applied. Noted."
 - "Request ALS" → "ALS has been requested."
-- "General impression..." → "The patient appears pale, diaphoretic, and anxious."
-- "Responsive to..." → "The patient responds to verbal stimuli."
+- "General impression" → "The patient appears pale, diaphoretic, and anxious."
+- "Responsive to" → "The patient responds to verbal stimuli."
 
-❌ Do not coach the user.
-❌ Do not say "That’s a question for the patient" unless it’s about symptoms or history.
-
+❌ Never give coaching or OPQRST/SAMPLE responses.
 Scenario context:
 ${scenario}
 User input: "${message}"
@@ -68,32 +69,24 @@ User input: "${message}"
         : `
 You are role-playing a realistic EMS patient with a medical complaint.
 
-🩺 Rules:
-- Only answer direct questions.
-- Do not guide or coach the user.
-- Use realistic, emotional, physical, and verbal responses.
-- React appropriately to skipped steps or lack of rapport.
-- Adjust tone and details based on user’s quality of care.
+🩺 Respond as described in the dispatch. Use realistic emotional and physical behavior. Only respond to questions directly asked.
 
-✅ You may answer:
-- Identity questions (e.g., "What’s your name?")
-- OPQRST and SAMPLE history questions
+✅ Answer:
+- "What is your name?"
+- OPQRST and SAMPLE questions
+- If chest pain: mention nitro
+- If allergic reaction: mention EpiPen
+- If asthma: mention MDI
 
-✅ Medication logic:
-- Chest pain → mention nitro
-- Allergic reaction → mention epinephrine
-- Asthma → mention MDI
+❌ Never give vitals, never describe the scene, never acknowledge treatments.
 
-❌ DO NOT give vitals
-❌ DO NOT acknowledge treatments
-❌ DO NOT describe the scene
+Adjust your tone based on how the user treats you.
 
-Scenario:
+Scenario context:
 ${scenario}
-User: "${message}"
+User input: "${message}"
 `;
 
-    // Step 6: Ask GPT for reply
     const completion = await openai.chat.completions.create({
       model,
       messages: [{ role: "system", content: prompt }],
@@ -113,7 +106,7 @@ User: "${message}"
   }
 };
 
-// ✅ Phrase-based role detector
+// 🔍 Phrase-based routing
 function detectProctorIntent(msg) {
   const lower = msg.toLowerCase();
   const keywords = [
@@ -127,13 +120,13 @@ function detectProctorIntent(msg) {
   return keywords.some(keyword => lower.includes(keyword));
 }
 
-// ✅ GPT-3.5 role classifier
+// 🧠 GPT-3.5-based AI classifier
 async function classifyRole(message) {
   const classificationPrompt = `
 You are assisting in a simulation. Decide who should respond.
 
-- If the message is about symptoms, history, medications, pain, SAMPLE, OPQRST → respond: "patient"
-- If it is about vitals, scene safety, diagnostics, treatments, BSI → respond: "proctor"
+- If it's about symptoms, history, pain, medications, OPQRST/SAMPLE → respond "patient"
+- If it's about vitals, scene, treatments, BSI, general impression → respond "proctor"
 
 Only respond with "patient" or "proctor".
 
